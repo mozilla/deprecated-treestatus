@@ -1,0 +1,31 @@
+<html>
+<head>
+    <title>{{tree.tree}}</title>
+</head>
+<body>
+<h1>{{tree.tree}} - {{tree.status}}</h1>
+Reason: {{tree.reason}}
+
+<form method="POST" action="{{tree.tree}}">
+{% if tree.status == 'closed': %}
+    <input type="hidden" name="action" value="open">
+    <input type="submit" value="Open tree">
+{% else %}
+    <input type="hidden" name="action" value="close">
+    <input type="submit" value="Close tree">
+{% endif %}
+Reason: <input type="text" name="reason">
+</form>
+
+<ul>
+{% for log in logs: %}
+<li>{{log.who}} {{log.when}} {{log.action}} {{log.reason}}</li>
+{% endfor %}
+</ul>
+
+<a href="/">All trees</a><br>
+{% if 'REMOTE_USER' in ctx.env: %}
+<a href="/logout">Logout</a><br>
+{% endif %}
+</body>
+</html>

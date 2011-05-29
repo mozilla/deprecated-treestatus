@@ -1,0 +1,16 @@
+{% for tree in trees %}
+<a href="{{tree}}">{{tree}}</a>: {{trees[tree].status}} {{trees[tree].reason}}<br/>
+{% endfor %}
+
+Add a new tree:
+<form method="POST" action="">
+    <input type="hidden" name="action" value="newtree">
+    <input type="text" name="tree">
+    <input type="submit">
+</form>
+
+<form method="POST" action="">
+    <input type="hidden" name="action" value="closeall">
+    <input type="text" name="reason">
+    <input type="submit" value="Close all trees">
+</form>
