@@ -200,9 +200,13 @@ urls = (
     '/([^/ ]+)/logs', 'WebTreeLog',
     )
 
-if __name__ == '__main__':
-    model.DbBase.metadata.create_all()
+def make_app():
     app = web.application(urls, globals())
     app.add_processor(get_session)
     app.add_processor(auth_handler)
+    return app
+
+if __name__ == '__main__':
+    model.DbBase.metadata.create_all()
+    app = make_app()
     app.run()
