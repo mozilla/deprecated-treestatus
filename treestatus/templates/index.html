@@ -1,16 +1,33 @@
+<html>
+<head>
+    <title>Tree Status</title>
+</head>
+<body>
+<h1>Trees</h1>
 {% for tree in trees %}
 <a href="{{tree}}">{{tree}}</a>: {{trees[tree].status}} {{trees[tree].reason}}<br/>
 {% endfor %}
 
+<p>
+<form method="POST" action="">
 Add a new tree:
-<form method="POST" action="">
-    <input type="hidden" name="action" value="newtree">
-    <input type="text" name="tree">
-    <input type="submit">
+    <input type="text" name="newtree">
+    <input type="submit" value="Add">
 </form>
+</p>
 
+<p>
 <form method="POST" action="">
-    <input type="hidden" name="action" value="closeall">
-    <input type="text" name="reason">
+    Reason: <input type="text" name="reason">
+    <input type="hidden" name="status" value="closed">
     <input type="submit" value="Close all trees">
 </form>
+</p>
+
+<a href="/">All trees</a>
+<a href="/help">Help</a>
+{% if 'REMOTE_USER' in ctx.env: %}
+<a href="/logout">Logout</a>
+{% endif %}
+</body>
+</html>

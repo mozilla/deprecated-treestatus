@@ -62,7 +62,20 @@ class Status:
             session.add(db_tree)
             self.log(tree, who, 'added', 'Added new tree')
             session.commit()
-            self.trees[tree] = db_tree.to_dict()
+
+        # Run setup again, we might have stuff left over from before in the
+        # database!
+        self.setup()
+
+    def del_tree(self, who, tree, reason):
+        with self.lock:
+            session = web.ctx.session
+            db_tree = session.query(model.DbTree).get(tree)
+            session.delete(db_tree)
+            self.log(tree, who, 'deleted', reason)
+            session.commit()
+            del self.trees[tree]
+            del self.logs[tree]
 
 status = Status()
 
@@ -83,27 +96,22 @@ class WebTrees(Base):
             web.ctx.headers.append(('Content-Type', 'text/json'))
             return dumps(status.trees)
         web.ctx['headers'].append(('Content-Type', 'text/html'))
-        return render.index(trees=status.trees)
+        return render.index(trees=status.trees, ctx=web.ctx)
 
     def POST(self):
         if not 'REMOTE_USER' in web.ctx.env:
             return web.Unauthorized()
 
         data = web.input()
-        if 'action' not in data:
-            return web.BadRequest()
-
-        if data.action == 'closeall':
+        if 'status' in data:
             for tree in status.trees:
-                status.set_status(web.ctx.env['REMOTE_USER'], tree, 'closed', data.reason)
-        elif data.action == 'newtree':
-            if 'tree' not in data:
+                status.set_status(web.ctx.env['REMOTE_USER'], tree, data.status, data.reason)
+        elif 'newtree' in data:
+            if not data.newtree:
                 return web.BadRequest()
-            if not data.tree:
+            if data.newtree in status.trees:
                 return web.BadRequest()
-            if data.tree in status.trees:
-                return web.BadRequest()
-            status.add_tree(web.ctx.env['REMOTE_USER'], data.tree)
+            status.add_tree(web.ctx.env['REMOTE_USER'], data.newtree)
         raise web.seeother('/')
 
 class WebTree(Base):
@@ -121,15 +129,27 @@ class WebTree(Base):
         if not 'REMOTE_USER' in web.ctx.env:
             return web.Unauthorized()
 
-        # Update tree status
         if tree not in status.trees:
             raise web.notfound()
 
         data = web.input()
-        if data.action == 'close':
-            status.set_status(web.ctx.env['REMOTE_USER'], tree, 'closed', data.get('reason', None))
-        elif data.action == 'open':
-            status.set_status(web.ctx.env['REMOTE_USER'], tree, 'open', data.get('reason', None))
+        if '_method' in data and data._method == 'DELETE':
+            return self.DELETE(tree)
+
+        # Update tree status
+        status.set_status(web.ctx.env['REMOTE_USER'], tree, data.status, data.reason)
+        raise web.seeother(tree)
+
+    def DELETE(self, tree):
+        if not 'REMOTE_USER' in web.ctx.env:
+            return web.Unauthorized()
+
+        if tree not in status.trees:
+            raise web.notfound()
+
+        data = web.input()
+        print data
+        status.del_tree(web.ctx.env['REMOTE_USER'], tree, data.reason)
         raise web.seeother(tree)
 
 class WebTreeLog(Base):
@@ -160,6 +180,10 @@ class WebLogout:
     def GET(self):
         return web.Unauthorized()
 
+class WebHelp:
+    def GET(self):
+        return render.help()
+
 def get_session(handler):
     web.ctx.session = model.Session()
     return handler()
@@ -167,6 +191,7 @@ def get_session(handler):
 urls = (
     '/', 'WebTrees',
     '/logout', 'WebLogout',
+    '/help', 'WebHelp',
     '.*/$', 'WebRedirector', # Redirect urls that end with / to ones that don't
     '/([^/ ]+)', 'WebTree',
     '/([^/ ]+)/logs', 'WebTreeLog',

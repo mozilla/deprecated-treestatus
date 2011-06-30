@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>{{tree.tree}}</title>
+    <title>{{tree.tree}} - {{tree.status}}</title>
 </head>
 <body>
 <h1>{{tree.tree}} - {{tree.status}}</h1>
@@ -8,10 +8,10 @@ Reason: {{tree.reason}}
 
 <form method="POST" action="{{tree.tree}}">
 {% if tree.status == 'closed': %}
-    <input type="hidden" name="action" value="open">
+    <input type="hidden" name="status" value="open">
     <input type="submit" value="Open tree">
 {% else %}
-    <input type="hidden" name="action" value="close">
+    <input type="hidden" name="status" value="closed">
     <input type="submit" value="Close tree">
 {% endif %}
 Reason: <input type="text" name="reason">
@@ -23,9 +23,10 @@ Reason: <input type="text" name="reason">
 {% endfor %}
 </ul>
 
-<a href="/">All trees</a><br>
+<a href="/">All trees</a>
+<a href="/help">Help</a>
 {% if 'REMOTE_USER' in ctx.env: %}
-<a href="/logout">Logout</a><br>
+<a href="/logout">Logout</a>
 {% endif %}
 </body>
 </html>

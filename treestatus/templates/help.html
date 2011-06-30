@@ -1,0 +1,22 @@
+<html>
+    <head>
+        <title>Treestatus Docs</title>
+    </head>
+    <body>
+        <h1>API</h1>
+        <table>
+            <thead>
+                <tr><th>URL</th><th>Method</th><th>Parameters</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>/</td><td>GET</td><td>[optional] format=json</td><td>Returns a list of all trees and their statuses</td></tr>
+                <tr><td>/</td><td>POST</td><td>status=(open|closed), reason</td><td>Sets the status of all trees to open/closed, with the specified reason</td></tr>
+                <tr><td>/</td><td>POST</td><td>newtree=$treename</td><td>Adds a new tree called treename</td></tr>
+                <tr><td>/$treename</td><td>GET</td><td>[optional] format=json</td><td>Returns status of $treename</td></tr>
+                <tr><td>/$treename</td><td>POST</td><td>status=(open|closed), reason</td><td>Sets the status of $treename to status, with the specified reason.</td></tr>
+                <tr><td>/$treename</td><td>DELETE (or POST with _method=DELETE)</td><td>reason</td><td>Remove this tree</td></tr>
+                <tr><td>/$treename/logs</td><td>GET</td><td>[optional] format=json,<br/>[optional] all=1</td><td>Returns logs of events on $treename. If all=1 then all events are returned, otherwise only the most recent 100 are returned.</td></tr>
+            </tbody>
+        </table>
+    </body>
+</html>
