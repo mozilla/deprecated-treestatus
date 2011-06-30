@@ -23,5 +23,8 @@ setup(name='treestatus',
             # -*- Entry points: -*-
             [paste.app_factory]
             main = treestatus.app:wsgiapp
+
+            [paste.app_install]
+            main = paste.script.appinstall:Installer
             """,
       )
