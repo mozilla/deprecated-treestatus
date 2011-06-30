@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 from treestatus import version
 
@@ -10,6 +10,7 @@ setup(name='treestatus',
       keywords='',
       author='Chris AtLee',
       author_email='chris@atlee.ca',
+      packages=find_packages(exclude=['ez_setup']),
       install_requires=[
           'setuptools',
           'simplejson',
