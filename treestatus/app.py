@@ -1,27 +1,12 @@
-import os, re
+import os
 from datetime import datetime
 from threading import RLock
 
-from simplejson import dumps, loads
+from simplejson import dumps
 import web
 from web.contrib.template import render_jinja
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
-
 import treestatus.model as model
-
-from config import db_url, auth, realm
-
-engine = create_engine(db_url)
-model.DbBase.metadata.bind = engine
-Session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
-
-class Unauth(web.Unauthorized):
-    realm = realm
-    def __init__(self, data='Unauthorized', headers={}):
-        headers.update({'WWW-Authenticate': 'Basic Realm="%s"' % self.realm})
-        super(Unauth, self).__init__(data, headers)
 
 class Status:
     def __init__(self):
@@ -32,14 +17,15 @@ class Status:
 
         self.lock = RLock()
 
+    def setup(self):
         # Populate self.trees, self.logs
-        for t in Session.query(model.DbTree):
+        for t in model.Session.query(model.DbTree):
             self.trees[t.tree] = t.to_dict()
 
         for t in self.trees:
             self.logs[t] = []
             # Load last 100 logs
-            for l in Session.query(model.DbLog).filter_by(tree=t).order_by(model.DbLog.when.desc()).limit(100):
+            for l in model.Session.query(model.DbLog).filter_by(tree=t).order_by(model.DbLog.when.desc()).limit(100):
                 self.logs[t].insert(0, l.to_dict())
 
     def log(self, tree, who, action, reason):
@@ -101,7 +87,7 @@ class WebTrees(Base):
 
     def POST(self):
         if not 'REMOTE_USER' in web.ctx.env:
-            return Unauth()
+            return web.Unauthorized()
 
         data = web.input()
         if 'action' not in data:
@@ -133,7 +119,7 @@ class WebTree(Base):
 
     def POST(self, tree):
         if not 'REMOTE_USER' in web.ctx.env:
-            return Unauth()
+            return web.Unauthorized()
 
         # Update tree status
         if tree not in status.trees:
@@ -154,7 +140,7 @@ class WebTreeLog(Base):
         data = web.input()
         if 'all' in data and data.all == '1':
             logs = []
-            for l in Session.query(model.DbLog).filter_by(tree=tree).order_by(model.DbLog.when.desc()):
+            for l in model.Session.query(model.DbLog).filter_by(tree=tree).order_by(model.DbLog.when.desc()):
                 logs.append(l.to_dict())
         else:
             logs = status.logs[tree]
@@ -172,25 +158,11 @@ class WebRedirector:
 
 class WebLogout:
     def GET(self):
-        return Unauth()
+        return web.Unauthorized()
 
 def get_session(handler):
-    web.ctx.session = Session()
+    web.ctx.session = model.Session()
     return handler()
-
-def auth_handler(handler):
-    auth_info = web.ctx.env.get('HTTP_AUTHORIZATION')
-    if auth_info is None:
-        return handler()
-
-    auth_info = re.sub('^Basic ','',auth_info)
-    username,password = auth_info.decode('base64').split(':')
-    login = auth.authenticate(environ=web.ctx.env, identity={'login': username, 'password': password})
-    if login:
-        web.ctx.env['REMOTE_USER'] = login
-        return handler()
-    else:
-        return Unauth()
 
 urls = (
     '/', 'WebTrees',
@@ -200,13 +172,10 @@ urls = (
     '/([^/ ]+)/logs', 'WebTreeLog',
     )
 
-def make_app():
+def wsgiapp(config, **kwargs):
+    config.update(kwargs)
+    model.setup(config)
+    status.setup()
     app = web.application(urls, globals())
     app.add_processor(get_session)
-    app.add_processor(auth_handler)
-    return app
-
-if __name__ == '__main__':
-    model.DbBase.metadata.create_all()
-    app = make_app()
-    app.run()
+    return app.wsgifunc()

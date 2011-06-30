@@ -1,8 +1,17 @@
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String, DateTime, Integer
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 DbBase = declarative_base()
+
+Session = None
+
+def setup(config):
+    engine = sa.engine_from_config(config)
+    DbBase.metadata.bind = engine
+    global Session
+    Session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 
 class DbTree(DbBase):
     __tablename__ = 'trees'

@@ -16,5 +16,12 @@ setup(name='treestatus',
           'jinja2',
           'web.py',
           'SQLAlchemy',
+          'repoze.who',
+          'pastescript',
           ],
+      entry_points="""
+            # -*- Entry points: -*-
+            [paste.app_factory]
+            main = treestatus.app:wsgiapp
+            """,
       )
