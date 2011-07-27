@@ -1,0 +1,12 @@
+Tree Status
+===========
+
+This is a simple wsgi app to maintain the open/closed state of development
+trees. It has a simple REST API, and a horrible web interface.
+
+Deployment
+==========
+python setup.py install
+copy/modify development.ini to your liking
+paster setup-app development.ini (you may need to comment out the filter-with line)
+paster serve development.ini
