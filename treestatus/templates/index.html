@@ -4,9 +4,16 @@
 </head>
 <body>
 <h1>Trees</h1>
+<table>
+    <thead>
+        <tr><th>name</th><th>state</th><th>reason</th></tr>
+    </thead>
+    <tbody>
 {% for tree in trees %}
-<a href="{{tree}}">{{tree}}</a>: {{trees[tree].status}} {{trees[tree].reason}}<br/>
+<tr><td><a href="{{tree}}">{{tree}}</a></td><td>{{trees[tree].status}}</td><tr>{{trees[tree].reason}}</td></tr>
 {% endfor %}
+    </tbody>
+</table>
 
 <p>
 <form method="POST" action="">

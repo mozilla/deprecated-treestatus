@@ -19,7 +19,7 @@ Reason: <input type="text" name="reason">
 
 <ul>
 {% for log in logs: %}
-<li>{{log.who}} {{log.when}} {{log.action}} {{log.reason}}</li>
+<li>{{log.who}} {{log.when}} action: {{log.action}}; reason: {{log.reason}}</li>
 {% endfor %}
 </ul>
 
