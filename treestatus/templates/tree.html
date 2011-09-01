@@ -6,6 +6,7 @@
 <h1>{{tree.tree}} - {{tree.status}}</h1>
 Reason: {{tree.reason}}
 
+{% if 'REMOTE_USER' in ctx.env: %}
 <form method="POST" action="{{tree.tree}}">
 {% if tree.status == 'closed': %}
     <input type="hidden" name="status" value="open">
@@ -16,6 +17,7 @@ Reason: {{tree.reason}}
 {% endif %}
 Reason: <input type="text" name="reason">
 </form>
+{% endif %}
 
 <ul>
 {% for log in logs: %}
@@ -27,6 +29,8 @@ Reason: <input type="text" name="reason">
 <a href="/help">Help</a>
 {% if 'REMOTE_USER' in ctx.env: %}
 <a href="/logout">Logout</a>
+{% else: %}
+<a href="/login">Login</a>
 {% endif %}
 </body>
 </html>

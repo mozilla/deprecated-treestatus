@@ -19,6 +19,7 @@ setup(name='treestatus',
           'SQLAlchemy',
           'repoze.who',
           'pastescript',
+          'python-memcached',
           ],
       entry_points="""
             # -*- Entry points: -*-

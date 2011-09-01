@@ -10,11 +10,12 @@
     </thead>
     <tbody>
 {% for tree in trees %}
-<tr><td><a href="{{tree}}">{{tree}}</a></td><td>{{trees[tree].status}}</td><td>{{trees[tree].reason}}</td></tr>
+<tr><td><a href="{{tree.tree}}">{{tree.tree}}</a></td><td>{{tree.status}}</td><td>{{tree.reason}}</td></tr>
 {% endfor %}
     </tbody>
 </table>
 
+{% if 'REMOTE_USER' in ctx.env: %}
 <p>
 <form method="POST" action="">
 Add a new tree:
@@ -30,11 +31,14 @@ Add a new tree:
     <input type="submit" value="Close all trees">
 </form>
 </p>
+{% endif %}
 
 <a href="/">All trees</a>
 <a href="/help">Help</a>
 {% if 'REMOTE_USER' in ctx.env: %}
 <a href="/logout">Logout</a>
+{% else: %}
+<a href="/login">Login</a>
 {% endif %}
 </body>
 </html>
