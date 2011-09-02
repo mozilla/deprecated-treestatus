@@ -148,7 +148,7 @@ class Status:
 status = Status()
 
 import flask
-from flask import Flask, request, make_response, render_template
+from flask import Flask, request, make_response, render_template, jsonify
 app = Flask(__name__)
 
 def is_json():
@@ -161,9 +161,7 @@ def is_json():
 @app.route('/')
 def index():
     if is_json():
-        resp = make_response(dumps(status.getTrees()))
-        resp.headers['Content-Type'] = 'text/json'
-        return resp
+        return jsonify(status.getTrees())
 
     trees = [t for t in status.getTrees().values()]
     trees.sort(key=lambda t: t['tree'])
@@ -209,9 +207,7 @@ def get_tree(tree):
         flask.abort(404)
 
     if is_json():
-        resp = make_response(dumps(t))
-        resp.headers['Content-Type'] = 'text/json'
-        return resp
+        return jsonify(t)
 
     resp = render_template('tree.html', tree=t, logs=status.getLogs(tree), loads=loads)
     return resp
@@ -228,8 +224,7 @@ def get_logs(tree):
         logs = status.getLogs(tree)
 
     if is_json():
-        resp = make_response(dumps(logs))
-        resp.headers['Content-Type'] = 'text/json'
+        resp = jsonify(dict(logs=logs))
     else:
         resp = make_response(dumps(logs, indent=2))
         resp.headers['Content-Type'] = 'text/plain'
