@@ -3,31 +3,30 @@
     <title>{{tree.tree}} - {{tree.status}}</title>
 </head>
 <body>
-<h1>{{tree.tree}} - {{tree.status}}</h1>
-Reason: {{tree.reason}}
+    <h1>{{tree.tree}} - {{tree.status}} ({{tree.reason}})</h1>
 
-{% if 'REMOTE_USER' in ctx.env: %}
+{% if 'REMOTE_USER' in request.environ: %}
 <form method="POST" action="{{tree.tree}}">
-{% if tree.status == 'closed': %}
-    <input type="hidden" name="status" value="open">
-    <input type="submit" value="Open tree">
-{% else %}
-    <input type="hidden" name="status" value="closed">
-    <input type="submit" value="Close tree">
-{% endif %}
 Reason: <input type="text" name="reason">
+<select name="status">
+    <option value="closed">Closed</option>
+    <option value="open">Open</option>
+    <option value="approval required">Approval Required</option>
+</select>
+<input type="checkbox" name="tags" value="infra" id="infra"><label for="infra">infrastructure related</label><br/>
+<input type="submit">
 </form>
 {% endif %}
 
 <ul>
 {% for log in logs: %}
-<li>{{log.who}} {{log.when}} action: {{log.action}}; reason: {{log.reason}}</li>
+<li>{{log.who}} {{log.when}} action: {{log.action}}; reason: {{log.reason}}; tags: {{", ".join(log.tags)}}</li>
 {% endfor %}
 </ul>
 
 <a href="/">All trees</a>
 <a href="/help">Help</a>
-{% if 'REMOTE_USER' in ctx.env: %}
+{% if 'REMOTE_USER' in request.environ: %}
 <a href="/logout">Logout</a>
 {% else: %}
 <a href="/login">Login</a>

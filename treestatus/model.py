@@ -16,16 +16,15 @@ def setup(config):
 class DbTree(DbBase):
     __tablename__ = 'trees'
     tree = Column(String(32), primary_key=True)
-    repo = Column(String)
     status = Column(String)
     reason = Column(String)
 
     def to_dict(self):
         return dict(
                 tree=self.tree,
-                repo=self.repo,
                 status=self.status,
-                reason=self.reason)
+                reason=self.reason,
+                )
 
 class DbLog(DbBase):
     __tablename__ = 'log'
@@ -35,6 +34,7 @@ class DbLog(DbBase):
     who = Column(String, nullable=False)
     action = Column(String(16), nullable=False)
     reason = Column(String, nullable=False)
+    tags = Column(String, nullable=False)
 
     def to_dict(self):
         return dict(
@@ -42,4 +42,6 @@ class DbLog(DbBase):
                 when=self.when.strftime("%Y-%m-%dT%H:%M:%S%Z"),
                 who=self.who,
                 action=self.action,
-                reason=self.reason)
+                reason=self.reason,
+                tags=self.tags,
+                )

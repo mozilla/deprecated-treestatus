@@ -1,10 +1,6 @@
-from __future__ import with_statement
-import os
 from datetime import datetime
 
 from simplejson import dumps, loads
-import web
-from web.contrib.template import render_jinja
 import memcache
 
 import treestatus.model as model
@@ -44,7 +40,12 @@ class Status:
         if limit:
             q = q.limit(limit)
         for l in q:
-            logs.append(l.to_dict())
+            d = l.to_dict()
+            try:
+                d['tags'] = loads(d['tags'])
+            except:
+                pass
+            logs.append(d)
 
         if self.memcache and limit == self.defaultLogCache:
             log.info("cache miss for logs:%s:%s", tree, limit)
@@ -95,14 +96,15 @@ class Status:
         if 'memcached.servers' in config:
             self.memcache = memcache.Client(config['memcached.servers'].split(","))
 
-    def log(self, tree, who, action, reason):
+    def log(self, tree, who, action, reason, tags=""):
         l = model.DbLog()
         l.tree = tree
         l.who = who
         l.action = action
         l.when = datetime.now()
         l.reason = reason
-        web.ctx.session.add(l)
+        l.tags = tags
+        request.session.add(l)
         if self.memcache:
             # Flush the cached logs
             self._mcDelete('logs:%s:%s' % (tree, self.defaultLogCache))
@@ -110,12 +112,12 @@ class Status:
     def get_status(self, tree):
         return self.getTree(tree)
 
-    def set_status(self, who, tree, status, reason):
-        session = web.ctx.session
+    def set_status(self, who, tree, status, reason, tags):
+        session = request.session
         db_tree = session.query(model.DbTree).get(tree)
         db_tree.status = status
         db_tree.reason = reason
-        self.log(tree, who, status, reason)
+        self.log(tree, who, status, reason, tags)
         session.commit()
         # Update cache
         if self.memcache:
@@ -125,7 +127,7 @@ class Status:
         db_tree = model.DbTree()
         db_tree.tree = tree
         db_tree.status = "open"
-        session = web.ctx.session
+        session = request.session
         session.add(db_tree)
         self.log(tree, who, 'added', 'Added new tree')
         session.commit()
@@ -134,7 +136,7 @@ class Status:
             self._mcDelete('trees')
 
     def del_tree(self, who, tree, reason):
-        session = web.ctx.session
+        session = request.session
         db_tree = session.query(model.DbTree).get(tree)
         session.delete(db_tree)
         self.log(tree, who, 'deleted', reason)
@@ -145,147 +147,139 @@ class Status:
 
 status = Status()
 
-render = render_jinja('%s/templates' % os.path.dirname(__file__), encoding='utf-8')
+import flask
+from flask import Flask, request, make_response, render_template
+app = Flask(__name__)
 
-class Base(object):
-    @staticmethod
-    def is_json():
-        if 'application/json' in web.ctx.env.get('HTTP_ACCEPT'):
-            return True
-        if "format=json" in web.ctx.query:
-            return True
-        return False
+def is_json():
+    if 'application/json' in request.headers.get('Accept', ''):
+        return True
+    if request.args.get('format') == 'json':
+        return True
+    return False
 
-class WebTrees(Base):
-    def GET(self):
-        if self.is_json():
-            web.ctx.headers.append(('Content-Type', 'text/json'))
-            return dumps(status.getTrees())
-        web.ctx['headers'].append(('Content-Type', 'text/html'))
-        trees = [t for t in status.getTrees().values()]
-        trees.sort(key=lambda t: t['tree'])
-        return render.index(trees=trees, ctx=web.ctx)
+@app.route('/')
+def index():
+    if is_json():
+        resp = make_response(dumps(status.getTrees()))
+        resp.headers['Content-Type'] = 'text/json'
+        return resp
 
-    def POST(self):
-        if not 'REMOTE_USER' in web.ctx.env:
-            return web.Unauthorized()
+    trees = [t for t in status.getTrees().values()]
+    trees.sort(key=lambda t: t['tree'])
 
-        data = web.input()
-        if 'status' in data:
-            for tree in status.getTrees():
-                status.set_status(web.ctx.env['REMOTE_USER'], tree, data.status, data.reason)
-        elif 'newtree' in data:
-            if not data.newtree:
-                return web.BadRequest()
-            if data.newtree in status.getTrees():
-                return web.BadRequest()
-            status.add_tree(web.ctx.env['REMOTE_USER'], data.newtree)
-        raise web.seeother('/')
+    resp = render_template('index.html', trees=trees)
+    return resp
 
-class WebTree(Base):
-    def GET(self, tree):
-        t = status.getTree(tree)
-        if not t:
-            raise web.notfound()
+@app.route('/help')
+def help():
+    return render_template('help.html')
 
-        if self.is_json():
-            web.ctx.headers.append(('Content-Type', 'text/json'))
-            return dumps(t)
-        web.ctx['headers'].append(('Content-Type', 'text/html'))
-        return render.tree(tree=t, logs=status.getLogs(tree), ctx=web.ctx)
+@app.route('/', methods=['POST'])
+def add_or_set_trees():
+    if not 'REMOTE_USER' in request.environ:
+        flask.abort(401)
 
-    def POST(self, tree):
-        if not 'REMOTE_USER' in web.ctx.env:
-            return web.Unauthorized()
+    if 'status' in request.form:
+        if request.form.get('reason', None) is None:
+            flask.abort(400, description="missing reason")
 
-        t = status.getTree(tree)
-        if not t:
-            raise web.notfound()
+        tags = dumps(request.form.getlist('tags'))
+        for tree in request.form.getlist('tree'):
+            status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags)
+    elif 'newtree' in request.form:
+        if not request.form['newtree']:
+            flask.abort(400)
+        if request.form['newtree'] in status.getTrees():
+            flask.abort(400)
+        status.add_tree(request.environ['REMOTE_USER'], request.form['newtree'])
+    return flask.redirect('/', 303)
 
-        data = web.input()
-        if '_method' in data and data._method == 'DELETE':
-            return self.DELETE(tree)
+@app.route('/login')
+def login():
+    if not 'REMOTE_USER' in request.environ:
+        flask.abort(401)
+    # TODO: Redirect them to where they were before
+    return flask.redirect('/', 303)
 
-        if not 'reason' in data or not 'status' in data:
-            raise web.BadRequest()
+@app.route('/<tree>', methods=['GET'])
+def get_tree(tree):
+    t = status.getTree(tree)
+    if not t:
+        flask.abort(404)
 
-        # Update tree status
-        status.set_status(web.ctx.env['REMOTE_USER'], tree, data.status, data.reason)
-        raise web.seeother(tree)
+    if is_json():
+        resp = make_response(dumps(t))
+        resp.headers['Content-Type'] = 'text/json'
+        return resp
 
-    def DELETE(self, tree):
-        if not 'REMOTE_USER' in web.ctx.env:
-            return web.Unauthorized()
+    resp = render_template('tree.html', tree=t, logs=status.getLogs(tree), loads=loads)
+    return resp
 
-        t = status.getTree(tree)
-        if not t:
-            raise web.notfound()
+@app.route('/<tree>/logs')
+def get_logs(tree):
+    t = status.getTree(tree)
+    if not t:
+        flask.abort(404)
 
-        # pretend this is a POST request; web.input() doesn't read POST
-        # parameters for DELETE calls
-        web.ctx.env['REQUEST_METHOD'] = 'POST'
-        data = web.input()
-        if not data or 'reason' not in data:
-            raise web.BadRequest()
-        status.del_tree(web.ctx.env['REMOTE_USER'], tree, data.reason)
-        raise web.seeother(tree)
+    if request.args.get('all') == '1':
+        logs = status.getLogs(tree, limit=None)
+    else:
+        logs = status.getLogs(tree)
 
-class WebTreeLog(Base):
-    def GET(self, tree):
-        if tree not in status.trees:
-            raise web.notfound()
+    if is_json():
+        resp = make_response(dumps(logs))
+        resp.headers['Content-Type'] = 'text/json'
+    else:
+        resp = make_response(dumps(logs, indent=2))
+        resp.headers['Content-Type'] = 'text/plain'
+    return resp
 
-        data = web.input()
-        if not ('all' in data and data.all == '1'):
-            logs = status.getLogs(tree, limit=None)
-        else:
-            logs = status.getLogs(tree)
+@app.route('/<tree>', methods=['POST'])
+def update_tree(tree):
+    if not 'REMOTE_USER' in request.environ:
+        flask.abort(401)
 
-        if self.is_json():
-            web.ctx.headers.append(('Content-Type', 'text/json'))
-            return dumps(logs)
-        else:
-            web.ctx['headers'].append(('Content-Type', 'text/plain'))
-            return dumps(logs, indent=2)
+    t = status.getTree(tree)
+    if not t:
+        flask.abort(404)
 
-class WebRedirector:
-    def GET(self):
-        raise web.redirect(web.ctx.path.rstrip('/'))
+    if '_method' in request.form and request.form['_method'] == 'DELETE':
+        return delete_tree(tree)
 
-class WebLogout:
-    def GET(self):
-        return web.Unauthorized()
+    if not 'reason' in request.form or not 'status' in request.form:
+        flask.abort(400)
 
-class WebLogin:
-    def GET(self):
-        if not 'REMOTE_USER' in web.ctx.env:
-            return web.Unauthorized()
-        # TODO: Redirect them to where they were before
-        return web.seeother("/")
+    # Update tree status
+    tags = dumps(request.form.getlist('tags'))
+    status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags)
+    return flask.redirect(tree, 303)
 
-class WebHelp:
-    def GET(self):
-        return render.help()
+@app.route('/<tree>', methods=['DELETE'])
+def delete_tree(tree):
+    if not 'REMOTE_USER' in request.environ:
+        flask.abort(401)
 
-def get_session(handler):
-    web.ctx.session = model.Session()
-    return handler()
+    t = status.getTree(tree)
+    if not t:
+        flask.abort(404)
 
-urls = (
-    '/', 'WebTrees',
-    '/logout', 'WebLogout',
-    '/login', 'WebLogin',
-    '/help', 'WebHelp',
-    '.*/$', 'WebRedirector', # Redirect urls that end with / to ones that don't
-    '/([^/ ]+)', 'WebTree',
-    '/([^/ ]+)/logs', 'WebTreeLog',
-    )
+    # pretend this is a POST request; request.args doesn't read POST
+    # parameters for DELETE calls
+    request.environ['REQUEST_METHOD'] = 'POST'
+    if not 'reason' in request.form:
+        flask.abort(400)
+    status.del_tree(request.environ['REMOTE_USER'], tree, request.form['reason'])
+    return flask.redirect(tree, 303)
+
+@app.before_request
+def create_session():
+    request.session = model.Session()
 
 def wsgiapp(config, **kwargs):
     config.update(kwargs)
     model.setup(config)
     status.setup(config)
-    app = web.application(urls, globals())
-    app.add_processor(get_session)
-    logging.basicConfig(format="%(message)s", level=logging.INFO)
-    return app.wsgifunc()
+    app.debug = True
+    logging.basicConfig(level=logging.INFO)
+    return app

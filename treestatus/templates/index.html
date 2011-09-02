@@ -4,18 +4,30 @@
 </head>
 <body>
 <h1>Trees</h1>
+<form method="POST" action="">
 <table>
     <thead>
         <tr><th>name</th><th>state</th><th>reason</th></tr>
     </thead>
     <tbody>
 {% for tree in trees %}
-<tr><td><a href="{{tree.tree}}">{{tree.tree}}</a></td><td>{{tree.status}}</td><td>{{tree.reason}}</td></tr>
+<tr><td><input type="checkbox" name="tree" value="{{tree.tree}}" /><a href="{{tree.tree}}">{{tree.tree}}</a></td><td>{{tree.status}}</td><td>{{tree.reason}}</td></tr>
 {% endfor %}
     </tbody>
 </table>
+<p>
+    Reason: <input type="text" name="reason">
+    <select name="status">
+        <option value="closed">Closed</option>
+        <option value="open">Open</option>
+        <option value="approval required">Approval Required</option>
+    </select>
+    <input type="checkbox" name="tags" value="infra" id="infra"><label for="infra">infrastructure related</label><br/>
+    <input type="submit" value="Set status">
+</p>
+</form>
 
-{% if 'REMOTE_USER' in ctx.env: %}
+{% if 'REMOTE_USER' in request.environ: %}
 <p>
 <form method="POST" action="">
 Add a new tree:
@@ -24,18 +36,11 @@ Add a new tree:
 </form>
 </p>
 
-<p>
-<form method="POST" action="">
-    Reason: <input type="text" name="reason">
-    <input type="hidden" name="status" value="closed">
-    <input type="submit" value="Close all trees">
-</form>
-</p>
 {% endif %}
 
 <a href="/">All trees</a>
 <a href="/help">Help</a>
-{% if 'REMOTE_USER' in ctx.env: %}
+{% if 'REMOTE_USER' in request.environ: %}
 <a href="/logout">Logout</a>
 {% else: %}
 <a href="/login">Login</a>
