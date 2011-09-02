@@ -14,12 +14,11 @@ setup(name='treestatus',
       install_requires=[
           'setuptools',
           'simplejson',
-          'jinja2',
-          'web.py',
           'SQLAlchemy',
           'repoze.who',
           'pastescript',
           'python-memcached',
+          'flask',
           ],
       entry_points="""
             # -*- Entry points: -*-
