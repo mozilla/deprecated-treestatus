@@ -200,6 +200,13 @@ def login():
     # TODO: Redirect them to where they were before
     return flask.redirect('/', 303)
 
+@app.route('/logout')
+def logout():
+    if 'REMOTE_USER' in request.environ:
+        flask.abort(401)
+    # TODO: Redirect them to where they were before
+    return flask.redirect('/', 303)
+
 @app.route('/<tree>', methods=['GET'])
 def get_tree(tree):
     t = status.getTree(tree)

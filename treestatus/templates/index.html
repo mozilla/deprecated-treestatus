@@ -29,6 +29,7 @@
 
 {% if 'REMOTE_USER' in request.environ: %}
 <p>
+Hello {{ request.environ['REMOTE_USER'] }}
 <form method="POST" action="">
 Add a new tree:
     <input type="text" name="newtree">
