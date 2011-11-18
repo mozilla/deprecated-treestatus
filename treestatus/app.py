@@ -262,9 +262,15 @@ def login():
 def logout():
     if 'REMOTE_USER' in request.environ:
         status.delete_token(request.environ['REMOTE_USER'])
+
+        # We can log out directly if we're using repoze.who
+        if 'repoze.who.api' in request.environ:
+            repoze_api = request.environ['repoze.who.api']
+            resp = make_response(flask.redirect('/', 303))
+            resp.headers.extend(repoze_api.logout())
+            return resp
+
         flask.abort(401)
-        #return flask.redirect('/', 303)
-    # TODO: Redirect them to where they were before
     return flask.redirect('/', 303)
 
 @app.route('/<path:tree>', methods=['GET'])
