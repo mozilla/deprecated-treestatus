@@ -6,14 +6,15 @@
     <h1>{{tree.tree}} - {{tree.status}} ({{tree.reason}})</h1>
 
 {% if 'REMOTE_USER' in request.environ: %}
-<form method="POST" action="{{tree.tree}}">
+<form method="POST" action="{{request.url_root}}{{tree.tree}}">
 Reason: <input type="text" name="reason" size="40">
 <select name="status">
     <option value="closed">Closed</option>
     <option value="open">Open</option>
     <option value="approval required">Approval Required</option>
 </select>
-<input type="checkbox" name="tags" value="infra" id="infra"><label for="infra">infrastructure related</label><br/>
+<input type="hidden" name="token" value="{{token}}" />
+<input type="checkbox" name="tags" value="infra" id="infra" /><label for="infra">infrastructure related</label><br/>
 <input type="submit">
 </form>
 {% endif %}
@@ -24,12 +25,12 @@ Reason: <input type="text" name="reason" size="40">
 {% endfor %}
 </ul>
 
-<a href="/">All trees</a>
-<a href="/help">Help</a>
+<a href="{{request.url_root}}">All trees</a>
+<a href="{{request.url_root}}help">Help</a>
 {% if 'REMOTE_USER' in request.environ: %}
-<a href="/logout">Logout</a>
+<a href="{{request.url_root}}logout">Logout</a>
 {% else: %}
-<a href="/login">Login</a>
+<a href="{{request.url_root}}login">Login</a>
 {% endif %}
 </body>
 </html>

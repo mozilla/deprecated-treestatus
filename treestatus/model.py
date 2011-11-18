@@ -45,3 +45,19 @@ class DbLog(DbBase):
                 reason=self.reason,
                 tags=self.tags,
                 )
+
+class DbToken(DbBase):
+    __tablename__ = 'tokens'
+    who = Column(String, nullable=False, primary_key=True)
+    token = Column(String(100), nullable=False)
+
+    @classmethod
+    def delete(cls, who):
+        q = cls.__table__.delete(cls.who == who)
+        q.execute()
+
+    @classmethod
+    def get(cls, who):
+        q = cls.__table__.select(cls.who == who)
+        result = q.execute().fetchone()
+        return result

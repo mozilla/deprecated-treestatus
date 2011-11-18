@@ -1,4 +1,7 @@
+import os
 from datetime import datetime
+import urllib
+from binascii import b2a_base64
 
 from simplejson import dumps, loads
 import memcache
@@ -16,6 +19,9 @@ class Status:
     def __init__(self):
         self.memcache = None
 
+    ###
+    # memcache helpers
+    ###
     def _mcKey(self, key):
         key = key.encode('base64').rstrip('=\n')
         return str('%s:%s' % (self.memcachePrefix, key))
@@ -35,6 +41,57 @@ class Status:
         key = self._mcKey(key)
         self.memcache.delete(key)
 
+    ###
+    # app helpers
+    ###
+    def setup(self, config):
+        # Check if we should be connecting to memcached
+        if 'memcached.servers' in config:
+            self.memcache = memcache.Client(config['memcached.servers'].split(","))
+
+    def log(self, tree, who, action, reason, tags=""):
+        l = model.DbLog()
+        l.tree = tree
+        l.who = who
+        l.action = action
+        l.when = datetime.now()
+        l.reason = reason
+        l.tags = tags
+        request.session.add(l)
+        if self.memcache:
+            # Flush the cached logs
+            self._mcDelete('logs:%s:%s' % (tree, self.defaultLogCache))
+
+    ###
+    # authentication helpers
+    ###
+    def make_token(self, who):
+        token = model.DbToken()
+        token.who = who
+        token.token = b2a_base64(os.urandom(64)).rstrip('=\n')
+        session = request.session
+        session.add(token)
+        session.commit()
+        return token.token
+
+    def delete_token(self, who):
+        model.DbToken.delete(who)
+
+    def validate_token(self, who, token):
+        t = model.DbToken.get(who)
+        if not t:
+            return False
+        return t.token == token
+
+    def get_token(self, who):
+        t = model.DbToken.get(who)
+        if not t:
+            return ''
+        return t.token
+
+    ###
+    # methods to serve url requests
+    ###
     def getLogs(self, tree, limit=defaultLogCache):
         if self.memcache and limit == self.defaultLogCache:
             logs = self._mcGet('logs:%s:%s' % (tree, limit))
@@ -98,24 +155,6 @@ class Status:
 
         return trees
 
-    def setup(self, config):
-        # Check if we should be connecting to memcached
-        if 'memcached.servers' in config:
-            self.memcache = memcache.Client(config['memcached.servers'].split(","))
-
-    def log(self, tree, who, action, reason, tags=""):
-        l = model.DbLog()
-        l.tree = tree
-        l.who = who
-        l.action = action
-        l.when = datetime.now()
-        l.reason = reason
-        l.tags = tags
-        request.session.add(l)
-        if self.memcache:
-            # Flush the cached logs
-            self._mcDelete('logs:%s:%s' % (tree, self.defaultLogCache))
-
     def get_status(self, tree):
         return self.getTree(tree)
 
@@ -158,12 +197,38 @@ import flask
 from flask import Flask, request, make_response, render_template, jsonify
 app = Flask(__name__)
 
+@app.template_filter('urlencode')
+def urlencode(s):
+    return urllib.quote(s, '')
+
+def urldecode(s):
+    return urllib.unquote(s)
+
 def is_json():
     if 'application/json' in request.headers.get('Accept', ''):
         return True
     if request.args.get('format') == 'json':
         return True
     return False
+
+def validate_write_request():
+    if not 'REMOTE_USER' in request.environ:
+        flask.abort(401)
+
+    token = request.form.get('token', None)
+    if token is None:
+        log.info("Couldn't find token in request")
+        print request.form
+        flask.abort(403)
+
+    if not status.validate_token(request.environ['REMOTE_USER'], token):
+        log.info("Couldn't validate token for user")
+        flask.abort(403)
+
+def get_token():
+    if 'REMOTE_USER' in request.environ:
+        return status.get_token(request.environ['REMOTE_USER'])
+    return ''
 
 @app.route('/')
 def index():
@@ -173,50 +238,38 @@ def index():
     trees = [t for t in status.getTrees().values()]
     trees.sort(key=lambda t: t['tree'])
 
-    resp = render_template('index.html', trees=trees)
+    resp = render_template('index.html', trees=trees, token=get_token())
     return resp
 
 @app.route('/help')
 def help():
     return render_template('help.html')
 
-@app.route('/', methods=['POST'])
-def add_or_set_trees():
-    if not 'REMOTE_USER' in request.environ:
-        flask.abort(401)
-
-    if 'status' in request.form:
-        if request.form.get('reason', None) is None:
-            flask.abort(400, description="missing reason")
-
-        tags = dumps(request.form.getlist('tags'))
-        for tree in request.form.getlist('tree'):
-            status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags)
-    elif 'newtree' in request.form:
-        if not request.form['newtree']:
-            flask.abort(400)
-        if request.form['newtree'] in status.getTrees():
-            flask.abort(400)
-        status.add_tree(request.environ['REMOTE_USER'], request.form['newtree'])
-    return flask.redirect('/', 303)
-
 @app.route('/login')
 def login():
     if not 'REMOTE_USER' in request.environ:
         flask.abort(401)
+
+    token = status.make_token(request.environ['REMOTE_USER'])
+
     # TODO: Redirect them to where they were before
-    return flask.redirect('/', 303)
+    resp = make_response(flask.redirect('/', 303))
+    # Include the token in the headers so scripts can re-use it
+    resp.headers['X-Treestatus-Token'] = token
+    return resp
 
 @app.route('/logout')
 def logout():
     if 'REMOTE_USER' in request.environ:
+        status.delete_token(request.environ['REMOTE_USER'])
         flask.abort(401)
         #return flask.redirect('/', 303)
     # TODO: Redirect them to where they were before
     return flask.redirect('/', 303)
 
-@app.route('/<tree>', methods=['GET'])
+@app.route('/<path:tree>', methods=['GET'])
 def get_tree(tree):
+    tree = urldecode(tree)
     t = status.getTree(tree)
     if not t:
         flask.abort(404)
@@ -224,10 +277,11 @@ def get_tree(tree):
     if is_json():
         return jsonify(t)
 
-    resp = render_template('tree.html', tree=t, logs=status.getLogs(tree), loads=loads)
+    resp = render_template('tree.html', tree=t, logs=status.getLogs(tree),
+            loads=loads, token=get_token())
     return resp
 
-@app.route('/<tree>/logs')
+@app.route('/<path:tree>/logs', methods=['GET'])
 def get_logs(tree):
     t = status.getTree(tree)
     if not t:
@@ -245,10 +299,29 @@ def get_logs(tree):
         resp.headers['Content-Type'] = 'text/plain'
     return resp
 
-@app.route('/<tree>', methods=['POST'])
+
+@app.route('/', methods=['POST'])
+def add_or_set_trees():
+    validate_write_request()
+
+    if 'status' in request.form:
+        if request.form.get('reason', None) is None:
+            flask.abort(400, description="missing reason")
+
+        tags = dumps(request.form.getlist('tags'))
+        for tree in request.form.getlist('tree'):
+            status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags)
+    elif 'newtree' in request.form:
+        if not request.form['newtree']:
+            flask.abort(400)
+        if request.form['newtree'] in status.getTrees():
+            flask.abort(400)
+        status.add_tree(request.environ['REMOTE_USER'], request.form['newtree'])
+    return flask.redirect('/', 303)
+
+@app.route('/<path:tree>', methods=['POST'])
 def update_tree(tree):
-    if not 'REMOTE_USER' in request.environ:
-        flask.abort(401)
+    validate_write_request()
 
     t = status.getTree(tree)
     if not t:
@@ -265,10 +338,9 @@ def update_tree(tree):
     status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags)
     return flask.redirect(tree, 303)
 
-@app.route('/<tree>', methods=['DELETE'])
+@app.route('/<path:tree>', methods=['DELETE'])
 def delete_tree(tree):
-    if not 'REMOTE_USER' in request.environ:
-        flask.abort(401)
+    validate_write_request()
 
     t = status.getTree(tree)
     if not t:
@@ -278,6 +350,7 @@ def delete_tree(tree):
     # parameters for DELETE calls
     request.environ['REQUEST_METHOD'] = 'POST'
     if not 'reason' in request.form:
+        log.info("bad request; missing reason")
         flask.abort(400)
     status.del_tree(request.environ['REMOTE_USER'], tree, request.form['reason'])
     return flask.redirect(tree, 303)

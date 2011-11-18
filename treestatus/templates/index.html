@@ -11,7 +11,7 @@
     </thead>
     <tbody>
 {% for tree in trees %}
-<tr><td><input type="checkbox" name="tree" value="{{tree.tree}}" /><a href="{{tree.tree}}">{{tree.tree}}</a></td><td>{{tree.status}}</td><td>{{tree.reason}}</td></tr>
+<tr><td><input type="checkbox" name="tree" value="{{tree.tree}}" /><a href="{{request.url_root}}{{tree.tree|urlencode|urlencode}}">{{tree.tree}}</a></td><td>{{tree.status}}</td><td>{{tree.reason}}</td></tr>
 {% endfor %}
     </tbody>
 </table>
@@ -22,6 +22,7 @@
         <option value="open">Open</option>
         <option value="approval required">Approval Required</option>
     </select>
+    <input type="hidden" name="token" value="{{token}}">
     <input type="checkbox" name="tags" value="infra" id="infra"><label for="infra">infrastructure related</label><br/>
     <input type="submit" value="Set status">
 </p>
@@ -33,18 +34,19 @@ Hello {{ request.environ['REMOTE_USER'] }}
 <form method="POST" action="">
 Add a new tree:
     <input type="text" name="newtree">
+    <input type="hidden" name="token" value="{{token}}">
     <input type="submit" value="Add">
 </form>
 </p>
 
 {% endif %}
 
-<a href="/">All trees</a>
-<a href="/help">Help</a>
+<a href="{{request.url_root}}">All trees</a>
+<a href="{{request.url_root}}help">Help</a>
 {% if 'REMOTE_USER' in request.environ: %}
-<a href="/logout">Logout</a>
+<a href="{{request.url_root}}logout">Logout</a>
 {% else: %}
-<a href="/login">Login</a>
+<a href="{{request.url_root}}login">Login</a>
 {% endif %}
 </body>
 </html>

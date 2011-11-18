@@ -18,5 +18,8 @@
                 <tr><td>/$treename/logs</td><td>GET</td><td>[optional]&nbsp;format=json<br/>[optional]&nbsp;all=1</td><td>Returns logs of events on $treename. If all=1 then all events are returned, otherwise only the most recent 100 are returned.</td></tr>
             </tbody>
         </table>
+        <p>treenames should be urlencoded if they contain special characters
+        such as '/'. Note that this means that in your browser they'll most
+        likely appear as doubly encoded.</p>
     </body>
 </html>
