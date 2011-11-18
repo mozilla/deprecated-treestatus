@@ -16,17 +16,24 @@ class Status:
     def __init__(self):
         self.memcache = None
 
+    def _mcKey(self, key):
+        key = key.encode('base64').rstrip('=\n')
+        return str('%s:%s' % (self.memcachePrefix, key))
+
     def _mcGet(self, key, default=None):
-        val = self.memcache.get(str('%s:%s' % (self.memcachePrefix, key)))
+        key = self._mcKey(key)
+        val = self.memcache.get(key)
         if val is None:
             return default
         return loads(val)
 
     def _mcPut(self, key, val, expires=0):
-        self.memcache.set(str('%s:%s' % (self.memcachePrefix, key)), dumps(val), time=expires)
+        key = self._mcKey(key)
+        self.memcache.set(key, dumps(val), time=expires)
 
     def _mcDelete(self, key):
-        self.memcache.delete(str('%s:%s' % (self.memcachePrefix, key)))
+        key = self._mcKey(key)
+        self.memcache.delete(key)
 
     def getLogs(self, tree, limit=defaultLogCache):
         if self.memcache and limit == self.defaultLogCache:
@@ -204,6 +211,7 @@ def login():
 def logout():
     if 'REMOTE_USER' in request.environ:
         flask.abort(401)
+        #return flask.redirect('/', 303)
     # TODO: Redirect them to where they were before
     return flask.redirect('/', 303)
 
