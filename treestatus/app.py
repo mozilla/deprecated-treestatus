@@ -66,6 +66,9 @@ class Status:
     # authentication helpers
     ###
     def make_token(self, who):
+        # Delete any previous token we have
+        model.DbToken.delete(who)
+
         token = model.DbToken()
         token.who = who
         token.token = b2a_base64(os.urandom(64)).rstrip('=\n')
