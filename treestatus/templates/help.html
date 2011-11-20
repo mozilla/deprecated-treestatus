@@ -1,6 +1,7 @@
 <html>
     <head>
         <title>Treestatus Docs</title>
+        <link rel="stylesheet" type="text/css" href="/static/releng.css" />
     </head>
     <body>
         <h1>API</h1>
@@ -21,5 +22,14 @@
         <p>treenames should be urlencoded if they contain special characters
         such as '/'. Note that this means that in your browser they'll most
         likely appear as doubly encoded.</p>
+        <p>
+        <a href="/">All trees</a>
+        <a href="/help">Help</a>
+        {% if 'REMOTE_USER' in request.environ: %}
+        <a href="/logout">Logout</a> ({{request.environ['REMOTE_USER']}})
+        {% else: %}
+        <a href="/login">Login</a>
+        {% endif %}
+        </p>
     </body>
 </html>

@@ -1,12 +1,16 @@
 <html>
 <head>
     <title>{{tree.tree}} - {{tree.status}}</title>
+    <link rel="stylesheet" type="text/css" href="/static/releng.css" />
 </head>
 <body>
-    <h1>{{tree.tree}} - {{tree.status}} ({{tree.reason}})</h1>
+    <h1>{{tree.tree}} is {{tree.status.upper()}}</h1>
+    {% if tree.reason: -%}
+    <h2>Reason: {{tree.reason}}</h2>
+    {% endif -%}
 
 {% if 'REMOTE_USER' in request.environ: %}
-<form method="POST" action="{{request.url_root}}{{tree.tree}}">
+<form method="POST" action="/{{tree.tree}}">
 Reason: <input type="text" name="reason" size="40">
 <select name="status">
     <option value="closed">Closed</option>
@@ -25,12 +29,12 @@ Reason: <input type="text" name="reason" size="40">
 {% endfor %}
 </ul>
 
-<a href="{{request.url_root}}">All trees</a>
-<a href="{{request.url_root}}help">Help</a>
+<a href="/">All trees</a>
+<a href="/help">Help</a>
 {% if 'REMOTE_USER' in request.environ: %}
-<a href="{{request.url_root}}logout">Logout</a>
+<a href="/logout">Logout</a> ({{request.environ['REMOTE_USER']}})
 {% else: %}
-<a href="{{request.url_root}}login">Login</a>
+<a href="/login">Login</a>
 {% endif %}
 </body>
 </html>

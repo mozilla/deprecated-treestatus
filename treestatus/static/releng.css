@@ -1,0 +1,21 @@
+body {
+    background: #FFF url('/static/background.jpg') no-repeat fixed top left;
+    margin-left: 20px;
+    margin-right: 20px;
+    font-family: sans-serif;
+}
+
+div.main {
+    width: 75%;
+    margin: 20px auto;
+}
+
+h1 {
+    border: 3px solid #AAA;
+    background-color: #EFF;
+    padding: 10px;
+    -moz-border-radius: 10px;
+    text-align: center;
+}
+
+

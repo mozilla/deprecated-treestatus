@@ -317,11 +317,12 @@ def add_or_set_trees():
         tags = dumps(request.form.getlist('tags'))
         for tree in request.form.getlist('tree'):
             status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags)
-    elif 'newtree' in request.form:
-        if not request.form['newtree']:
-            flask.abort(400)
+
+    if request.form.get('newtree'):
         if request.form['newtree'] in status.getTrees():
-            flask.abort(400)
+            resp = make_response("Bad Request: Duplicate tree name")
+            resp.status_code = 400
+            return resp
         status.add_tree(request.environ['REMOTE_USER'], request.form['newtree'])
     return flask.redirect('/', 303)
 

@@ -1,52 +1,66 @@
 <html>
 <head>
     <title>Tree Status</title>
+    <link rel="stylesheet" type="text/css" href="/static/releng.css" />
 </head>
 <body>
 <h1>Trees</h1>
+{% if 'REMOTE_USER' in request.environ: -%}
 <form method="POST" action="">
+<input type="hidden" name="token" value="{{token}}">
+{% endif %}
 <table>
     <thead>
         <tr><th>name</th><th>state</th><th>reason</th></tr>
     </thead>
     <tbody>
-{% for tree in trees %}
-<tr><td><input type="checkbox" name="tree" value="{{tree.tree}}" /><a href="{{request.url_root}}{{tree.tree|urlencode|urlencode}}">{{tree.tree}}</a></td><td>{{tree.status}}</td><td>{{tree.reason}}</td></tr>
-{% endfor %}
+{% for tree in trees -%}
+<tr>
+    <td>
+    {% if 'REMOTE_USER' in request.environ: -%}
+    <input type="checkbox" name="tree" value="{{tree.tree}}" />
+    {% endif -%}
+    <a href="/{{tree.tree|urlencode|urlencode}}">{{tree.tree}}</a>
+    </td>
+    <td>{{tree.status.upper()}}</td>
+    <td>{{tree.reason or ""}}</td>
+</tr>
+{% endfor -%}
+{% if 'REMOTE_USER' in request.environ: -%}
+    <tr>
+        <td valign="top">Modify selected trees</td>
+        <td valign="top">
+        <select name="status">
+            <option value="closed">Closed</option>
+            <option value="open">Open</option>
+            <option value="approval required">Approval Required</option>
+        </select>
+        </td>
+        <td><input type="text" name="reason" size="30"><br/>
+            <input type="checkbox" name="tags" value="infra" id="infra">
+            <label for="infra">infrastructure related</label><br/>
+            <input type="submit">
+        </td>
+    </tr>
+    <tr>
+        <td><input type="text" name="newtree"></td>
+        <td><input type="submit" value="Add tree"></td>
+    </tr>
+{% endif -%}
     </tbody>
 </table>
-<p>
-    Reason: <input type="text" name="reason" size="40">
-    <select name="status">
-        <option value="closed">Closed</option>
-        <option value="open">Open</option>
-        <option value="approval required">Approval Required</option>
-    </select>
-    <input type="hidden" name="token" value="{{token}}">
-    <input type="checkbox" name="tags" value="infra" id="infra"><label for="infra">infrastructure related</label><br/>
-    <input type="submit" value="Set status">
-</p>
+{% if 'REMOTE_USER' in request.environ: -%}
 </form>
+{% endif -%}
 
-{% if 'REMOTE_USER' in request.environ: %}
 <p>
-Hello {{ request.environ['REMOTE_USER'] }}
-<form method="POST" action="">
-Add a new tree:
-    <input type="text" name="newtree">
-    <input type="hidden" name="token" value="{{token}}">
-    <input type="submit" value="Add">
-</form>
-</p>
-
-{% endif %}
-
-<a href="{{request.url_root}}">All trees</a>
-<a href="{{request.url_root}}help">Help</a>
+<a href="/">All trees</a>
+<a href="/help">Help</a>
 {% if 'REMOTE_USER' in request.environ: %}
-<a href="{{request.url_root}}logout">Logout</a>
+<a href="/logout">Logout</a> ({{request.environ['REMOTE_USER']}})
 {% else: %}
-<a href="{{request.url_root}}login">Login</a>
+<a href="/login">Login</a>
 {% endif %}
+</p>
 </body>
 </html>
