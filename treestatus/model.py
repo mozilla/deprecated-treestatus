@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String, DateTime, Integer
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy import Column, String, DateTime, Integer, ForeignKey
+from sqlalchemy.orm import scoped_session, sessionmaker, relation
 
 DbBase = declarative_base()
 
@@ -16,8 +16,8 @@ def setup(config):
 class DbTree(DbBase):
     __tablename__ = 'trees'
     tree = Column(String(32), primary_key=True)
-    status = Column(String)
-    reason = Column(String)
+    status = Column(String, default="open", nullable=False)
+    reason = Column(String, default="", nullable=False)
 
     def to_dict(self):
         return dict(
@@ -61,3 +61,20 @@ class DbToken(DbBase):
         q = cls.__table__.select(cls.who == who)
         result = q.execute().fetchone()
         return result
+
+class DbStatusStack(DbBase):
+    __tablename__ = 'status_stacks'
+    id = Column(Integer, primary_key=True)
+    who = Column(String, nullable=False)
+    reason = Column(String, nullable=False)
+    when = Column(DateTime, nullable=False, index=True)
+    status = Column(String, nullable=False)
+
+class DbStatusStackTree(DbBase):
+    __tablename__ = 'status_stack_trees'
+    id = Column(Integer, primary_key=True)
+    stack_id = Column(Integer, ForeignKey(DbStatusStack.id), index=True)
+    tree = Column(String(32), nullable=False, index=True)
+    last_state = Column(String, nullable=False)
+
+    stack = relation(DbStatusStack, backref='trees')

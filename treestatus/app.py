@@ -95,7 +95,7 @@ class Status:
     ###
     # methods to serve url requests
     ###
-    def getLogs(self, tree, limit=defaultLogCache):
+    def get_logs(self, tree, limit=defaultLogCache):
         if self.memcache and limit == self.defaultLogCache:
             logs = self._mcGet('logs:%s:%s' % (tree, limit))
             if logs:
@@ -119,7 +119,7 @@ class Status:
             self._mcPut('logs:%s:%s' % (tree, limit), logs, expires=60)
         return logs
 
-    def getTree(self, tree):
+    def get_tree(self, tree):
         if self.memcache:
             t = self._mcGet('tree:%s' % tree)
             if t:
@@ -135,13 +135,13 @@ class Status:
 
         return t
 
-    def getTrees(self):
+    def get_trees(self):
         if self.memcache:
             treenames = self._mcGet('trees')
             if treenames:
                 trees = {}
                 for t in treenames:
-                    trees[t] = self.getTree(t)
+                    trees[t] = self.get_tree(t)
                 return trees
 
         trees = {}
@@ -159,18 +159,67 @@ class Status:
         return trees
 
     def get_status(self, tree):
-        return self.getTree(tree)
+        return self.get_tree(tree)
 
-    def set_status(self, who, tree, status, reason, tags):
+    def set_status(self, who, tree, status, reason, tags, flush_stack=True):
         session = request.session
         db_tree = session.query(model.DbTree).get(tree)
         db_tree.status = status
         db_tree.reason = reason
+        if flush_stack:
+            for s in session.query(model.DbStatusStackTree).filter_by(tree=tree):
+                stack = s.stack
+                stack.trees.remove(s)
+                if not stack.trees:
+                    session.delete(stack)
+                session.delete(s)
         self.log(tree, who, status, reason, tags)
         session.commit()
         # Update cache
         if self.memcache:
             self._mcPut('tree:%s' % tree, db_tree.to_dict(), expires=60)
+
+    def restore_status(self, who, stack_id):
+        log.info("%s is restoring stack %s", who, stack_id)
+        session = request.session
+        stack = session.query(model.DbStatusStack).get(stack_id)
+
+        for tree in stack.trees:
+            # Restore its state
+            last_state = loads(tree.last_state)
+            self.set_status(who, tree.tree, last_state['status'], last_state['reason'], '', flush_stack=False)
+
+        # Delete everything
+        for tree in stack.trees:
+            session.delete(tree)
+        session.delete(stack)
+        session.commit()
+
+    def remember_state(self, who, trees, status, reason):
+        if not trees:
+            return
+        stack = model.DbStatusStack()
+        stack.who = who
+        stack.reason = reason
+        stack.when = datetime.now()
+        stack.status = status
+        session = request.session
+        session.add(stack)
+        log.debug("Remembering %s", stack)
+
+        for tree in trees:
+            s = model.DbStatusStackTree()
+            s.stack = stack
+            s.tree = tree
+            s.last_state = dumps(session.query(model.DbTree).get(tree).to_dict())
+            session.add(s)
+
+        session.commit()
+
+    def get_remembered_states(self):
+        session = request.session
+        stacks = session.query(model.DbStatusStack).order_by(model.DbStatusStack.when.desc())
+        return list(stacks)
 
     def add_tree(self, who, tree):
         db_tree = model.DbTree()
@@ -236,12 +285,14 @@ def get_token():
 @app.route('/')
 def index():
     if is_json():
-        return jsonify(status.getTrees())
+        return jsonify(status.get_trees())
 
-    trees = [t for t in status.getTrees().values()]
+    trees = [t for t in status.get_trees().values()]
     trees.sort(key=lambda t: t['tree'])
 
-    resp = render_template('index.html', trees=trees, token=get_token())
+    stacks = status.get_remembered_states()
+
+    resp = render_template('index.html', trees=trees, token=get_token(), stacks=stacks)
     return resp
 
 @app.route('/help')
@@ -279,27 +330,27 @@ def logout():
 @app.route('/<path:tree>', methods=['GET'])
 def get_tree(tree):
     tree = urldecode(tree)
-    t = status.getTree(tree)
+    t = status.get_tree(tree)
     if not t:
         flask.abort(404)
 
     if is_json():
         return jsonify(t)
 
-    resp = render_template('tree.html', tree=t, logs=status.getLogs(tree),
+    resp = render_template('tree.html', tree=t, logs=status.get_logs(tree),
             loads=loads, token=get_token())
     return resp
 
 @app.route('/<path:tree>/logs', methods=['GET'])
 def get_logs(tree):
-    t = status.getTree(tree)
+    t = status.get_tree(tree)
     if not t:
         flask.abort(404)
 
     if request.args.get('all') == '1':
-        logs = status.getLogs(tree, limit=None)
+        logs = status.get_logs(tree, limit=None)
     else:
-        logs = status.getLogs(tree)
+        logs = status.get_logs(tree)
 
     if is_json():
         resp = jsonify(dict(logs=logs))
@@ -313,27 +364,36 @@ def get_logs(tree):
 def add_or_set_trees():
     validate_write_request()
 
-    if 'status' in request.form:
+    if request.form.get('restore'):
+        # Restore stacked status
+        status.restore_status(request.environ['REMOTE_USER'], request.form['restore'])
+
+    if request.form.get('status'):
         if request.form.get('reason', None) is None:
             flask.abort(400, description="missing reason")
 
         tags = dumps(request.form.getlist('tags'))
-        for tree in request.form.getlist('tree'):
-            status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags)
+        trees = request.form.getlist('tree')
+        if request.form.get('remember') == 'remember':
+            flush_stack = False
+            status.remember_state(request.environ['REMOTE_USER'], trees, request.form['status'], request.form['reason'])
+        else:
+            flush_stack = True
+
+        for tree in trees:
+            status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags, flush_stack)
 
     if request.form.get('newtree'):
-        if request.form['newtree'] in status.getTrees():
-            resp = make_response("Bad Request: Duplicate tree name")
-            resp.status_code = 400
-            return resp
-        status.add_tree(request.environ['REMOTE_USER'], request.form['newtree'])
+        if request.form['newtree'] not in status.get_trees():
+            # We don't have this yet, so go create it!
+            status.add_tree(request.environ['REMOTE_USER'], request.form['newtree'])
     return flask.redirect('/', 303)
 
 @app.route('/<path:tree>', methods=['POST'])
 def update_tree(tree):
     validate_write_request()
 
-    t = status.getTree(tree)
+    t = status.get_tree(tree)
     if not t:
         flask.abort(404)
 
@@ -352,7 +412,7 @@ def update_tree(tree):
 def delete_tree(tree):
     validate_write_request()
 
-    t = status.getTree(tree)
+    t = status.get_tree(tree)
     if not t:
         flask.abort(404)
 
@@ -374,5 +434,5 @@ def wsgiapp(config, **kwargs):
     model.setup(config)
     status.setup(config)
     app.debug = True
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     return app

@@ -8,7 +8,7 @@
 {% if 'REMOTE_USER' in request.environ: -%}
 <form method="POST" action="">
 <input type="hidden" name="token" value="{{token}}">
-{% endif %}
+{% endif -%}
 <table>
     <thead>
         <tr><th>name</th><th>state</th><th>reason</th></tr>
@@ -39,6 +39,8 @@
         <td><input type="text" name="reason" size="30"><br/>
             <input type="checkbox" name="tags" value="infra" id="infra">
             <label for="infra">infrastructure related</label><br/>
+            <input type="checkbox" name="remember" value="remember" id="remember" checked="checked">
+            <label for="remember">remember previous state</label><br/>
             <input type="submit">
         </td>
     </tr>
@@ -51,16 +53,30 @@
 </table>
 {% if 'REMOTE_USER' in request.environ: -%}
 </form>
+{% if stacks -%}
+<h2>Previous states</h2>
+{% for stack in stacks: -%}
+<form method="POST">
+<input type="hidden" name="token" value="{{token}}">
+<input type="hidden" name="restore" value="{{stack.id}}" />
+At {{stack.when.strftime("%Y-%m-%d %H:%M:%S")}}
+{{stack.who}} changed 
+{% for t in stack.trees %} {{t.tree}} {% endfor -%}
+to {{stack.status.upper()}} {{stack.reason}}
+<input type="submit" value="restore" />
+</form>
+{% endfor -%}
+{% endif -%}
 {% endif -%}
 
 <p>
 <a href="/">All trees</a>
 <a href="/help">Help</a>
-{% if 'REMOTE_USER' in request.environ: %}
+{% if 'REMOTE_USER' in request.environ: -%}
 <a href="/logout">Logout</a> ({{request.environ['REMOTE_USER']}})
-{% else: %}
+{% else: -%}
 <a href="/login">Login</a>
-{% endif %}
+{% endif -%}
 </p>
 </body>
 </html>
