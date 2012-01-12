@@ -1,6 +1,6 @@
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String, DateTime, Integer, ForeignKey
+from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import scoped_session, sessionmaker, relation
 
 DbBase = declarative_base()
@@ -78,3 +78,16 @@ class DbStatusStackTree(DbBase):
     last_state = Column(String, nullable=False)
 
     stack = relation(DbStatusStack, backref='trees')
+
+class DbUser(DbBase):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, index=True)
+    is_admin = Column(Boolean, nullable=False, default=False)
+    is_sheriff = Column(Boolean, nullable=False, default=False)
+
+    @classmethod
+    def get(cls, name):
+        q = cls.__table__.select(cls.name == name)
+        result = q.execute().fetchone()
+        return result

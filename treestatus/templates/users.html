@@ -1,0 +1,53 @@
+<html>
+<head>
+    <title>Tree Status</title>
+    <link rel="stylesheet" type="text/css" href="/static/releng.css" />
+</head>
+<body>
+<h1>Users</h1>
+<form method="POST" action="">
+<input type="hidden" name="token" value="{{token}}">
+<table>
+    <thead>
+        <tr><th>name</th><th>sheriff</th><th>admin</th><th>delete</th></tr>
+    </thead>
+    <tbody>
+{% for u in users -%}
+    <tr>
+        <td>{{u.name}}</td>
+        {% if u.is_sheriff -%}
+        <input type="hidden" name="was_sheriff" value="{{u.id}}"/>
+        {% endif -%}
+        {% if u.is_admin -%}
+        <input type="hidden" name="was_admin" value="{{u.id}}"/>
+        {% endif -%}
+        <td><input type="checkbox" name="sheriff" value="{{u.id}}" {{'checked=1' if u.is_sheriff else ''}}/></td>
+        <td><input type="checkbox" name="admin" value="{{u.id}}" {{'checked=1' if u.is_admin else ''}}/></td>
+        <td><input type="checkbox" name="delete" value="{{u.id}}" />
+    </tr>
+{% endfor -%}
+    <tr>
+        <td></td>
+        <td colspan="3"><input type="submit"/></td>
+    </tr>
+    <tr>
+        <td><input type="text" name="newuser"></td>
+        <td><input type="submit" value="Add user"></td>
+    </tr>
+</table>
+</form>
+
+<p>
+<a href="/">All trees</a>
+<a href="/help">Help</a>
+{% if user and user.is_admin -%}
+<a href="/users">Manage Users</a>
+{% endif -%}
+{% if 'REMOTE_USER' in request.environ: -%}
+<a href="/logout">Logout</a> ({{request.environ['REMOTE_USER']}})
+{% else: -%}
+<a href="/login">Login</a>
+{% endif -%}
+</p>
+</body>
+</html>

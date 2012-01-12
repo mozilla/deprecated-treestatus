@@ -1,11 +1,14 @@
-import os
+import os, site
+my_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+site.addsitedir(my_dir)
+site.addsitedir(my_dir + "/vendor/lib/python")
 from datetime import datetime
 import urllib
 from binascii import b2a_base64
 
 from simplejson import dumps, loads
 import memcache
-
+from repoze.who.config import make_middleware_with_config
 import treestatus.model as model
 
 import logging
@@ -65,6 +68,10 @@ class Status:
     ###
     # authentication helpers
     ###
+    def get_user(self, who):
+        u = model.DbUser.get(who)
+        return u
+
     def make_token(self, who):
         # Delete any previous token we have
         model.DbToken.delete(who)
@@ -264,17 +271,22 @@ def is_json():
     return False
 
 def validate_write_request():
-    if not 'REMOTE_USER' in request.environ:
+    who = request.environ.get('REMOTE_USER')
+    if who is None:
         flask.abort(401)
 
     token = request.form.get('token', None)
     if token is None:
         log.info("Couldn't find token in request")
-        print request.form
         flask.abort(403)
 
-    if not status.validate_token(request.environ['REMOTE_USER'], token):
+    if not status.validate_token(who, token):
         log.info("Couldn't validate token for user")
+        flask.abort(403)
+
+    u = status.get_user(who)
+    if not u or not (u.is_sheriff or u.is_admin):
+        log.info("User isn't allowed to do that")
         flask.abort(403)
 
 def get_token():
@@ -292,7 +304,12 @@ def index():
 
     stacks = status.get_remembered_states()
 
-    resp = render_template('index.html', trees=trees, token=get_token(), stacks=stacks)
+    if 'REMOTE_USER' in request.environ:
+        user = status.get_user(request.environ['REMOTE_USER'])
+    else:
+        user = None
+
+    resp = render_template('index.html', trees=trees, token=get_token(), stacks=stacks, user=user)
     return resp
 
 @app.route('/help')
@@ -301,10 +318,17 @@ def help():
 
 @app.route('/login')
 def login():
-    if not 'REMOTE_USER' in request.environ:
+    who = request.environ.get('REMOTE_USER')
+
+    if who is None:
         flask.abort(401)
 
-    token = status.make_token(request.environ['REMOTE_USER'])
+    u = status.get_user(who)
+    if not u or not (u.is_admin or u.is_sheriff):
+        log.info("%s is not allowed", who)
+        flask.abort(401)
+
+    token = status.make_token(who)
 
     # TODO: Redirect them to where they were before
     resp = make_response(flask.redirect('/', 303))
@@ -359,6 +383,74 @@ def get_logs(tree):
         resp.headers['Content-Type'] = 'text/plain'
     return resp
 
+@app.route('/users', methods=['GET'])
+def show_users():
+    u = status.get_user(request.environ['REMOTE_USER'])
+    if not u or not u.is_admin:
+        flask.abort(403)
+
+    users = model.Session.query(model.DbUser)
+    resp = render_template('users.html', user=u, users=users, token=get_token())
+    return resp
+
+@app.route('/users', methods=['POST'])
+def modify_users():
+    u = status.get_user(request.environ['REMOTE_USER'])
+    if not u or not u.is_admin:
+        flask.abort(403)
+
+    validate_write_request()
+
+    session = request.session
+
+    # Delete users
+    for uid in request.form.getlist('delete'):
+        log.info("deleting %s", uid)
+        u = session.query(model.DbUser).filter_by(id=uid).one()
+        if u:
+            session.delete(u)
+
+    # Add users
+    if request.form.get('newuser'):
+        u = model.DbUser()
+        u.name = request.form.get('newuser')
+        u.is_admin = False
+        u.is_sheriff = False
+        session.add(u)
+
+    # Remove admin privs
+    for uid in request.form.getlist('was_admin'):
+        if not uid in request.form.getlist('admin'):
+            u = session.query(model.DbUser).filter_by(id=uid).one()
+            if not u:
+                continue
+            u.is_admin = False
+
+    # Add admin privs
+    for uid in request.form.getlist('admin'):
+        u = session.query(model.DbUser).filter_by(id=uid).one()
+        if not u:
+            continue
+        u.is_admin = True
+
+    # Remove sheriff privs
+    for uid in request.form.getlist('was_sheriff'):
+        if not uid in request.form.getlist('sheriff'):
+            u = session.query(model.DbUser).filter_by(id=uid).one()
+            if not u:
+                continue
+            u.is_sheriff = False
+
+    # Add sheriff privs
+    for uid in request.form.getlist('sheriff'):
+        u = session.query(model.DbUser).filter_by(id=uid).one()
+        if not u:
+            continue
+        u.is_sheriff = True
+
+    session.commit()
+
+    return flask.redirect('/users', 303)
 
 @app.route('/', methods=['POST'])
 def add_or_set_trees():
@@ -406,7 +498,7 @@ def update_tree(tree):
     # Update tree status
     tags = dumps(request.form.getlist('tags'))
     status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags)
-    return flask.redirect(tree, 303)
+    return flask.redirect("/" + tree, 303)
 
 @app.route('/<path:tree>', methods=['DELETE'])
 def delete_tree(tree):
@@ -423,7 +515,7 @@ def delete_tree(tree):
         log.info("bad request; missing reason")
         flask.abort(400)
     status.del_tree(request.environ['REMOTE_USER'], tree, request.form['reason'])
-    return flask.redirect(tree, 303)
+    return flask.redirect("/" + tree, 303)
 
 @app.before_request
 def create_session():
@@ -433,6 +525,7 @@ def wsgiapp(config, **kwargs):
     config.update(kwargs)
     model.setup(config)
     status.setup(config)
-    app.debug = True
+    app.debug = config.get('debug')
+    app.wsgi_app = make_middleware_with_config(app.wsgi_app, config, config.get('who_config', 'who.ini'))
     logging.basicConfig(level=logging.DEBUG)
     return app

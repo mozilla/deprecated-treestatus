@@ -60,8 +60,7 @@
 <input type="hidden" name="token" value="{{token}}">
 <input type="hidden" name="restore" value="{{stack.id}}" />
 At {{stack.when.strftime("%Y-%m-%d %H:%M:%S")}}
-{{stack.who}} changed 
-{% for t in stack.trees %} {{t.tree}} {% endfor -%}
+{{stack.who}} changed {{ stack.trees | join(", ", attribute="tree") }}
 to {{stack.status.upper()}} {{stack.reason}}
 <input type="submit" value="restore" />
 </form>
@@ -72,6 +71,9 @@ to {{stack.status.upper()}} {{stack.reason}}
 <p>
 <a href="/">All trees</a>
 <a href="/help">Help</a>
+{% if user and user.is_admin -%}
+<a href="/users">Manage Users</a>
+{% endif -%}
 {% if 'REMOTE_USER' in request.environ: -%}
 <a href="/logout">Logout</a> ({{request.environ['REMOTE_USER']}})
 {% else: -%}
