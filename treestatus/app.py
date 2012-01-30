@@ -385,6 +385,9 @@ def get_logs(tree):
 
 @app.route('/users', methods=['GET'])
 def show_users():
+    if 'REMOTE_USER' not in request.environ:
+        flask.abort(403)
+
     u = status.get_user(request.environ['REMOTE_USER'])
     if not u or not u.is_admin:
         flask.abort(403)
@@ -395,6 +398,9 @@ def show_users():
 
 @app.route('/users', methods=['POST'])
 def modify_users():
+    if 'REMOTE_USER' not in request.environ:
+        flask.abort(403)
+
     u = status.get_user(request.environ['REMOTE_USER'])
     if not u or not u.is_admin:
         flask.abort(403)
@@ -527,5 +533,5 @@ def wsgiapp(config, **kwargs):
     status.setup(config)
     app.debug = config.get('debug')
     app.wsgi_app = make_middleware_with_config(app.wsgi_app, config, config.get('who_config', 'who.ini'))
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.WARN)
     return app

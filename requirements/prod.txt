@@ -1,3 +1,4 @@
 flask==0.7.2
 repoze.who
-repoze.who.plugins.browserid>=0.2.1
+repoze.who.plugins.browserid>=0.3.0
+PyVEP>=0.3.1
