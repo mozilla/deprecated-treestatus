@@ -7,6 +7,10 @@ trees. It has a simple REST API, and a horrible web interface.
 Deployment
 ==========
 python setup.py install
-copy/modify development.ini to your liking
-paster setup-app development.ini (you may need to comment out the filter-with line)
-paster serve development.ini
+
+edit who.ini to your liking. in particular, audiences should match the public
+url of the site. secret should also be changed to something random.
+
+python testapp.py for local testing
+
+treestatus.wsgi can be used as a template for wsgi deployments
