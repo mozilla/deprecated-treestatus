@@ -3,7 +3,7 @@ import os, site
 
 # Add the app dir to the python path so we can import manage.
 wsgidir = os.path.dirname(__file__)
-site.addsitedir(os.path.abspath(os.path.join(wsgidir, '../')))
+site.addsitedir(os.path.abspath(os.path.join(wsgidir, './')))
 
 import treestatus.app, treestatus.model as model
 
