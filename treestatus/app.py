@@ -1,7 +1,7 @@
 import os, site
 my_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 site.addsitedir(my_dir)
-site.addsitedir(my_dir + "/vendor/lib/python")
+site.addsitedir(my_dir + "./vendor/lib/python")
 from datetime import datetime
 import urllib
 from binascii import b2a_base64
