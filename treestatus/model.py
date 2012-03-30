@@ -16,8 +16,8 @@ def setup(config):
 class DbTree(DbBase):
     __tablename__ = 'trees'
     tree = Column(String(32), primary_key=True)
-    status = Column(String, default="open", nullable=False)
-    reason = Column(String, default="", nullable=False)
+    status = Column(String(64), default="open", nullable=False)
+    reason = Column(String(256), default="", nullable=False)
 
     def to_dict(self):
         return dict(
@@ -31,10 +31,10 @@ class DbLog(DbBase):
     id = Column(Integer, primary_key=True)
     tree = Column(String(32), nullable=False, index=True)
     when = Column(DateTime, nullable=False, index=True)
-    who = Column(String, nullable=False)
+    who = Column(String(100), nullable=False)
     action = Column(String(16), nullable=False)
-    reason = Column(String, nullable=False)
-    tags = Column(String, nullable=False)
+    reason = Column(String(256), nullable=False)
+    tags = Column(String(256), nullable=False)
 
     def to_dict(self):
         return dict(
@@ -48,7 +48,7 @@ class DbLog(DbBase):
 
 class DbToken(DbBase):
     __tablename__ = 'tokens'
-    who = Column(String, nullable=False, primary_key=True)
+    who = Column(String(100), nullable=False, primary_key=True)
     token = Column(String(100), nullable=False)
 
     @classmethod
@@ -65,24 +65,24 @@ class DbToken(DbBase):
 class DbStatusStack(DbBase):
     __tablename__ = 'status_stacks'
     id = Column(Integer, primary_key=True)
-    who = Column(String, nullable=False)
-    reason = Column(String, nullable=False)
+    who = Column(String(100), nullable=False)
+    reason = Column(String(256), nullable=False)
     when = Column(DateTime, nullable=False, index=True)
-    status = Column(String, nullable=False)
+    status = Column(String(64), nullable=False)
 
 class DbStatusStackTree(DbBase):
     __tablename__ = 'status_stack_trees'
     id = Column(Integer, primary_key=True)
     stack_id = Column(Integer, ForeignKey(DbStatusStack.id), index=True)
     tree = Column(String(32), nullable=False, index=True)
-    last_state = Column(String, nullable=False)
+    last_state = Column(String(1024), nullable=False)
 
     stack = relation(DbStatusStack, backref='trees')
 
 class DbUser(DbBase):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
-    name = Column(String, index=True)
+    name = Column(String(100), index=True)
     is_admin = Column(Boolean, nullable=False, default=False)
     is_sheriff = Column(Boolean, nullable=False, default=False)
 
