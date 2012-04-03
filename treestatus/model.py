@@ -8,7 +8,7 @@ DbBase = declarative_base()
 Session = None
 
 def setup(config):
-    engine = sa.engine_from_config(config)
+    engine = sa.engine_from_config(config, pool_recycle=60)
     DbBase.metadata.bind = engine
     global Session
     Session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))

@@ -528,6 +528,11 @@ def delete_tree(tree):
 def create_session():
     request.session = model.Session()
 
+@app.after_request
+def close_session(response):
+    request.session.close()
+    return response
+
 def wsgiapp(config, **kwargs):
     config.update(kwargs)
     model.setup(config)
