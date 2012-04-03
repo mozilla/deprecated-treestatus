@@ -538,6 +538,7 @@ def wsgiapp(config, **kwargs):
     model.setup(config)
     status.setup(config)
     app.debug = config.get('debug')
-    app.wsgi_app = make_middleware_with_config(app.wsgi_app, config, config.get('who_config', 'who.ini'))
+    configfile = my_dir + "/who.ini"
+    app.wsgi_app = make_middleware_with_config(app.wsgi_app, config, config.get('who_config', configfile))
     logging.basicConfig(level=logging.WARN)
     return app
