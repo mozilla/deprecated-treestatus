@@ -10,6 +10,7 @@ import treestatus.app, treestatus.model as model
 application = treestatus.app.wsgiapp({
     'here': os.curdir,
     'sqlalchemy.url': 'sqlite:///treestatus.db',
+    'memcached.servers': 'localhost:11211',
     'debug': False,
 })
 
