@@ -110,7 +110,7 @@ class Status:
                 return logs
 
         logs = []
-        q = model.Session.query(model.DbLog).filter_by(tree=tree)
+        q = request.session.query(model.DbLog).filter_by(tree=tree)
         q = q.order_by(model.DbLog.when.desc())
         if limit:
             q = q.limit(limit)
@@ -135,7 +135,7 @@ class Status:
 
             log.info("cache miss for %s", tree)
 
-        t = model.Session.query(model.DbTree).get(tree)
+        t = request.session.query(model.DbTree).get(tree)
         if t:
             t = t.to_dict()
         if self.memcache:
@@ -154,7 +154,7 @@ class Status:
 
         trees = {}
         treenames = []
-        for t in model.Session.query(model.DbTree):
+        for t in request.session.query(model.DbTree):
             trees[t.tree] = t.to_dict()
             treenames.append(t.tree)
             if self.memcache:
@@ -393,7 +393,7 @@ def show_users():
     if not u or not u.is_admin:
         flask.abort(403)
 
-    users = model.Session.query(model.DbUser)
+    users = request.session.query(model.DbUser)
     resp = render_template('users.html', user=u, users=users, token=get_token())
     return resp
 
