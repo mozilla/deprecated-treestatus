@@ -10,6 +10,8 @@ from binascii import b2a_base64
 from simplejson import dumps, loads
 import memcache
 from repoze.who.config import make_middleware_with_config
+import sqlalchemy as sa
+
 import treestatus.model as model
 
 import logging
@@ -532,6 +534,11 @@ def create_session():
 def close_session(response):
     request.session.close()
     return response
+
+@app.errorhandler(sa.exc.InvalidRequestError)
+def handle_db_error(e):
+    request.session.close()
+    raise e
 
 def wsgiapp(config, **kwargs):
     config.update(kwargs)
