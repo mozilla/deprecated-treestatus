@@ -24,11 +24,7 @@
         <td><input type="checkbox" name="sheriff" value="{{u.id}}" {{'checked=1' if u.is_sheriff else ''}}/></td>
         <td><input type="checkbox" name="admin" value="{{u.id}}" {{'checked=1' if u.is_admin else ''}}/></td>
         <td>
-            <form method="POST" action="">
-            <input type="hidden" name="token" value="{{token}}" />
-            <input type="hidden" name="delete" value="{{u.id}}" />
-            <input type="submit" value="delete" />
-            </form>
+            <input type="submit" name="delete:{{u.id}}" value="delete" />
         <td/>
     </tr>
 {% endfor -%}

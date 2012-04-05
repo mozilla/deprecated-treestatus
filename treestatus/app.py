@@ -312,12 +312,17 @@ def index():
     else:
         user = None
 
-    resp = render_template('index.html', trees=trees, token=get_token(), stacks=stacks, user=user)
+    resp = make_response(render_template('index.html', trees=trees, token=get_token(), stacks=stacks, user=user))
+    resp.headers['Cache-Control'] = 'max-age=30'
+    if '?nc' in request.url:
+        resp.headers['Cache-Control'] = 'no-cache'
     return resp
 
 @app.route('/help')
 def help():
-    return render_template('help.html')
+    resp = make_response(render_template('help.html'))
+    resp.headers['Cache-Control'] = 'max-age=600'
+    return resp
 
 @app.route('/login')
 def login():
@@ -334,7 +339,7 @@ def login():
     token = status.make_token(who)
 
     # TODO: Redirect them to where they were before
-    resp = make_response(flask.redirect('/', 303))
+    resp = make_response(flask.redirect('/?nc', 303))
     # Include the token in the headers so scripts can re-use it
     resp.headers['X-Treestatus-Token'] = token
     return resp
@@ -347,12 +352,12 @@ def logout():
         # We can log out directly if we're using repoze.who
         if 'repoze.who.api' in request.environ:
             repoze_api = request.environ['repoze.who.api']
-            resp = make_response(flask.redirect('/', 303))
+            resp = make_response(flask.redirect('/?nc', 303))
             resp.headers.extend(repoze_api.logout())
             return resp
 
         flask.abort(401)
-    return flask.redirect('/', 303)
+    return flask.redirect('/?nc', 303)
 
 @app.route('/<path:tree>', methods=['GET'])
 def get_tree(tree):
@@ -364,8 +369,11 @@ def get_tree(tree):
     if is_json():
         return jsonify(t)
 
-    resp = render_template('tree.html', tree=t, logs=status.get_logs(tree),
-            loads=loads, token=get_token())
+    resp = make_response(render_template('tree.html', tree=t, logs=status.get_logs(tree),
+            loads=loads, token=get_token()))
+    resp.headers['Cache-Control'] = 'max-age=30'
+    if '?nc' in request.url:
+        resp.headers['Cache-Control'] = 'no-cache'
     return resp
 
 @app.route('/<path:tree>/logs', methods=['GET'])
@@ -384,19 +392,25 @@ def get_logs(tree):
     else:
         resp = make_response(dumps(logs, indent=2))
         resp.headers['Content-Type'] = 'text/plain'
+    resp.headers['Cache-Control'] = 'max-age=30'
     return resp
 
 @app.route('/users', methods=['GET'])
 def show_users():
     if 'REMOTE_USER' not in request.environ:
+        log.debug("not logged in")
         flask.abort(403)
 
     u = status.get_user(request.environ['REMOTE_USER'])
     if not u or not u.is_admin:
+        log.debug("%s is not an admin", u)
         flask.abort(403)
 
     users = request.session.query(model.DbUser)
-    resp = render_template('users.html', user=u, users=users, token=get_token())
+    resp = make_response(render_template('users.html', user=u, users=users, token=get_token()))
+    resp.headers['Cache-Control'] = 'max-age=30'
+    if '?nc' in request.url:
+        resp.headers['Cache-Control'] = 'no-cache'
     return resp
 
 @app.route('/users', methods=['POST'])
@@ -412,8 +426,13 @@ def modify_users():
 
     session = request.session
 
+    log.info("form data: %s", request.form)
+
     # Delete users
-    for uid in request.form.getlist('delete'):
+    for k in request.form.keys():
+        if not k.startswith("delete:"):
+            continue
+        uid = k[len("delete:"):]
         log.info("deleting %s", uid)
         u = session.query(model.DbUser).filter_by(id=uid).one()
         if u:
@@ -459,7 +478,7 @@ def modify_users():
 
     session.commit()
 
-    return flask.redirect('/users', 303)
+    return flask.redirect('/users?nc', 303)
 
 @app.route('/', methods=['POST'])
 def add_or_set_trees():
@@ -488,7 +507,7 @@ def add_or_set_trees():
         if request.form['newtree'] not in status.get_trees():
             # We don't have this yet, so go create it!
             status.add_tree(request.environ['REMOTE_USER'], request.form['newtree'])
-    return flask.redirect('/', 303)
+    return flask.redirect('/?nc', 303)
 
 @app.route('/<path:tree>', methods=['POST'])
 def update_tree(tree):
@@ -507,7 +526,7 @@ def update_tree(tree):
     # Update tree status
     tags = dumps(request.form.getlist('tags'))
     status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags)
-    return flask.redirect("/" + tree, 303)
+    return flask.redirect("/?nc" + tree, 303)
 
 @app.route('/<path:tree>', methods=['DELETE'])
 def delete_tree(tree):
@@ -547,5 +566,5 @@ def wsgiapp(config, **kwargs):
     app.debug = config.get('debug')
     configfile = my_dir + "/who.ini"
     app.wsgi_app = make_middleware_with_config(app.wsgi_app, config, config.get('who_config', configfile))
-    logging.basicConfig(level=logging.WARN)
+    logging.basicConfig(level=logging.DEBUG)
     return app

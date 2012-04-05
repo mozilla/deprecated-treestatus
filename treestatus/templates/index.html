@@ -56,7 +56,7 @@
 {% if stacks -%}
 <h2>Previous states</h2>
 {% for stack in stacks: -%}
-<form method="POST">
+<form method="POST" action="">
 <input type="hidden" name="token" value="{{token}}">
 <input type="hidden" name="restore" value="{{stack.id}}" />
 At {{stack.when.strftime("%Y-%m-%d %H:%M:%S")}}
