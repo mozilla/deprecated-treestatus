@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <!-- hi mom -->
 <head>
     <title>Tree Status</title>
@@ -7,8 +8,7 @@
 <body>
 <h1>Trees</h1>
 {% if 'REMOTE_USER' in request.environ: -%}
-<form method="POST" action="">
-<input type="hidden" name="token" value="{{token}}">
+<form method="post" action="">
 {% endif -%}
 <table>
     <thead>
@@ -19,6 +19,7 @@
 <tr>
     <td>
     {% if 'REMOTE_USER' in request.environ: -%}
+    <input type="hidden" name="token" value="{{token}}" />
     <input type="checkbox" name="tree" value="{{tree.tree}}" />
     {% endif -%}
     <a href="/{{tree.tree|urlencode|urlencode}}">{{tree.tree}}</a>
@@ -37,17 +38,17 @@
             <option value="approval required">Approval Required</option>
         </select>
         </td>
-        <td><input type="text" name="reason" size="30"><br/>
-            <input type="checkbox" name="tags" value="infra" id="infra">
+        <td><input type="text" name="reason" size="30" /><br/>
+            <input type="checkbox" name="tags" value="infra" id="infra" />
             <label for="infra">infrastructure related</label><br/>
-            <input type="checkbox" name="remember" value="remember" id="remember" checked="checked">
+            <input type="checkbox" name="remember" value="remember" id="remember" checked="checked" />
             <label for="remember">remember previous state</label><br/>
-            <input type="submit">
+            <input type="submit" />
         </td>
     </tr>
     <tr>
-        <td><input type="text" name="newtree"></td>
-        <td><input type="submit" value="Add tree"></td>
+        <td><input type="text" name="newtree" /></td>
+        <td><input type="submit" value="Add tree" /></td>
     </tr>
 {% endif -%}
     </tbody>
@@ -57,13 +58,15 @@
 {% if stacks -%}
 <h2>Previous states</h2>
 {% for stack in stacks: -%}
-<form method="POST" action="">
-<input type="hidden" name="token" value="{{token}}">
+<form method="post" action="">
+<p>
+<input type="hidden" name="token" value="{{token}}" />
 <input type="hidden" name="restore" value="{{stack.id}}" />
 At {{stack.when.strftime("%Y-%m-%d %H:%M:%S")}}
 {{stack.who}} changed {{ stack.trees | join(", ", attribute="tree") }}
 to {{stack.status.upper()}} {{stack.reason}}
 <input type="submit" value="restore" />
+</p>
 </form>
 {% endfor -%}
 {% endif -%}

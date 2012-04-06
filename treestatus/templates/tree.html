@@ -1,17 +1,18 @@
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title>{{tree.tree}} - {{tree.status}}</title>
     <link rel="stylesheet" type="text/css" href="/static/releng.css" />
 </head>
 <body>
-    <h1>{{tree.tree}} is {{tree.status.upper()}}</h1>
-    {% if tree.reason: -%}
-    <h2>Reason: {{tree.reason}}</h2>
-    {% endif -%}
-
-{% if 'REMOTE_USER' in request.environ: %}
-<form method="POST" action="/{{tree.tree}}">
-Reason: <input type="text" name="reason" size="40">
+<h1>{{tree.tree}} is {{tree.status.upper()}}</h1>
+{% if tree.reason: -%}
+<h2>Reason: {{tree.reason}}</h2>
+{% endif -%}
+{% if 'REMOTE_USER' in request.environ: -%}
+<form method="post" action="/{{tree.tree}}">
+<p>
+Reason: <input type="text" name="reason" size="40" />
 <select name="status">
     <option value="closed">Closed</option>
     <option value="open">Open</option>
@@ -19,22 +20,23 @@ Reason: <input type="text" name="reason" size="40">
 </select>
 <input type="hidden" name="token" value="{{token}}" />
 <input type="checkbox" name="tags" value="infra" id="infra" /><label for="infra">infrastructure related</label><br/>
-<input type="submit">
+<input type="submit" />
+</p>
 </form>
-{% endif %}
-
+{% endif -%}
 <ul>
-{% for log in logs: %}
+{% for log in logs: -%}
 <li>{{log.who}} {{log.when}} action: {{log.action}}; reason: {{log.reason}}; tags: {{", ".join(log.tags)}}</li>
-{% endfor %}
+{% endfor -%}
 </ul>
-
+<p>
 <a href="/">All trees</a>
 <a href="/help">Help</a>
-{% if 'REMOTE_USER' in request.environ: %}
+{% if 'REMOTE_USER' in request.environ: -%}
 <a href="/logout">Logout</a> ({{request.environ['REMOTE_USER']}})
-{% else: %}
+{% else: -%}
 <a href="/login">Login</a>
-{% endif %}
+{% endif -%}
+</p>
 </body>
 </html>
