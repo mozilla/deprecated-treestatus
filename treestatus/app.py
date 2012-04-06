@@ -552,9 +552,13 @@ def delete_tree(tree):
 def create_session():
     request.session = model.Session()
 
+import os, time
+_started = time.asctime()
 @app.after_request
 def close_session(response):
     request.session.close()
+    response.headers['x-pid'] = str(os.getpid())
+    response.headers['x-started'] = str(_started)
     return response
 
 @app.errorhandler(sa.exc.InvalidRequestError)
