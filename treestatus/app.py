@@ -314,6 +314,7 @@ def index():
 
     resp = make_response(render_template('index.html', trees=trees, token=get_token(), stacks=stacks, user=user))
     resp.headers['Cache-Control'] = 'max-age=30'
+    resp.headers['Vary'] = 'Cookie'
     if '?nc' in request.url:
         resp.headers['Cache-Control'] = 'no-cache'
     return resp
@@ -372,6 +373,7 @@ def get_tree(tree):
     resp = make_response(render_template('tree.html', tree=t, logs=status.get_logs(tree),
             loads=loads, token=get_token()))
     resp.headers['Cache-Control'] = 'max-age=30'
+    resp.headers['Vary'] = 'Cookie'
     if '?nc' in request.url:
         resp.headers['Cache-Control'] = 'no-cache'
     return resp
@@ -409,6 +411,7 @@ def show_users():
     users = request.session.query(model.DbUser)
     resp = make_response(render_template('users.html', user=u, users=users, token=get_token()))
     resp.headers['Cache-Control'] = 'max-age=30'
+    resp.headers['Vary'] = 'Cookie'
     if '?nc' in request.url:
         resp.headers['Cache-Control'] = 'no-cache'
     return resp
