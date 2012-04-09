@@ -63,7 +63,13 @@
 <input type="hidden" name="token" value="{{token}}" />
 <input type="hidden" name="restore" value="{{stack.id}}" />
 At {{stack.when.strftime("%Y-%m-%d %H:%M:%S")}}
-{{stack.who}} changed {{ stack.trees | join(", ", attribute="tree") }}
+{{stack.who}} changed 
+{% for t in stack.trees -%}
+{%- if loop.index0 > 0 -%}
+, 
+{%- endif -%}
+{{t.tree}}
+{%- endfor -%}
 to {{stack.status.upper()}} {{stack.reason}}
 <input type="submit" value="restore" />
 </p>
