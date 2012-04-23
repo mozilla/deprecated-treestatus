@@ -335,7 +335,13 @@ def login():
     u = status.get_user(who)
     if not u or not (u.is_admin or u.is_sheriff):
         log.info("%s is not allowed", who)
-        flask.abort(401)
+        status.delete_token(who)
+        resp = make_response(render_template('badlogin.html'), 403)
+        # Force the user to logout
+        if 'repoze.who.api' in request.environ:
+            repoze_api = request.environ['repoze.who.api']
+            resp.headers.extend(repoze_api.logout())
+        return resp
 
     token = status.make_token(who)
 
