@@ -194,7 +194,12 @@ class Status:
         session = request.session
         stack = session.query(model.DbStatusStack).get(stack_id)
 
+        all_trees = self.get_trees()
+
         for tree in stack.trees:
+            if tree not in all_trees:
+                # Must have been deleted; skip over it
+                continue
             # Restore its state
             last_state = loads(tree.last_state)
             self.set_status(who, tree.tree, last_state['status'], last_state['reason'], '', flush_stack=False)
@@ -427,8 +432,8 @@ def modify_users():
     if 'REMOTE_USER' not in request.environ:
         flask.abort(403)
 
-    u = status.get_user(request.environ['REMOTE_USER'])
-    if not u or not u.is_admin:
+    admin = status.get_user(request.environ['REMOTE_USER'])
+    if not admin or not admin.is_admin:
         flask.abort(403)
 
     validate_write_request()
@@ -442,9 +447,9 @@ def modify_users():
         if not k.startswith("delete:"):
             continue
         uid = k[len("delete:"):]
-        log.info("deleting %s", uid)
         u = session.query(model.DbUser).filter_by(id=uid).one()
         if u:
+            log.info("%s is deleting %s", admin.name, u.name)
             session.delete(u)
 
     # Add users
@@ -453,6 +458,7 @@ def modify_users():
         u.name = request.form.get('newuser')
         u.is_admin = False
         u.is_sheriff = False
+        log.info("%s is creating user %s", admin.name, u.name)
         session.add(u)
 
     # Remove admin privs
@@ -461,13 +467,15 @@ def modify_users():
             u = session.query(model.DbUser).filter_by(id=uid).one()
             if not u:
                 continue
+            log.info("%s is removing admin flag from %s", admin.name, u.name)
             u.is_admin = False
 
     # Add admin privs
     for uid in request.form.getlist('admin'):
         u = session.query(model.DbUser).filter_by(id=uid).one()
-        if not u:
+        if not u or u.is_admin:
             continue
+        log.info("%s is adding admin flag to %s", admin.name, u.name)
         u.is_admin = True
 
     # Remove sheriff privs
@@ -476,13 +484,15 @@ def modify_users():
             u = session.query(model.DbUser).filter_by(id=uid).one()
             if not u:
                 continue
+            log.info("%s is removing sheriff flag from %s", admin.name, u.name)
             u.is_sheriff = False
 
     # Add sheriff privs
     for uid in request.form.getlist('sheriff'):
         u = session.query(model.DbUser).filter_by(id=uid).one()
-        if not u:
+        if not u or u.is_sheriff:
             continue
+        log.info("%s is adding sheriff flag to %s", admin.name, u.name)
         u.is_sheriff = True
 
     session.commit()
@@ -535,7 +545,7 @@ def update_tree(tree):
     # Update tree status
     tags = dumps(request.form.getlist('tags'))
     status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags)
-    return flask.redirect("/?nc" + tree, 303)
+    return flask.redirect("/%s?nc" % tree, 303)
 
 @app.route('/<path:tree>', methods=['DELETE'])
 def delete_tree(tree):
