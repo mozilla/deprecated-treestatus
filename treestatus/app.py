@@ -197,8 +197,9 @@ class Status:
         all_trees = self.get_trees()
 
         for tree in stack.trees:
-            if tree not in all_trees:
+            if tree.tree not in all_trees:
                 # Must have been deleted; skip over it
+                log.debug("%s doesn't exist in %s; skipping", tree, all_trees)
                 continue
             # Restore its state
             last_state = loads(tree.last_state)
