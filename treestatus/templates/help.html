@@ -16,7 +16,7 @@
                 <tr><td>/</td><td>POST</td><td>newtree=$treename</td><td>Adds a new tree called treename</td></tr>
                 <tr><td>/$treename</td><td>GET</td><td>[optional]&nbsp;format=json</td><td>Returns status of $treename</td></tr>
                 <tr><td>/$treename</td><td>POST</td><td>status=$status<br/>reason<br/>[optional]&nbsp;tags=$tag</td><td>Sets the status of $treename to status, with the specified reason and tags. tags can be given multiple times to set multiple tags.</td></tr>
-                <tr><td>/$treename</td><td>DELETE (or POST with _method=DELETE)</td><td></td><td>Remove this tree</td></tr>
+                <tr><td>/$treename</td><td>DELETE (or POST with _method=DELETE)</td><td>reason</td><td>Remove this tree</td></tr>
                 <tr><td>/$treename/logs</td><td>GET</td><td>[optional]&nbsp;format=json<br/>[optional]&nbsp;all=1</td><td>Returns logs of events on $treename. If all=1 then all events are returned, otherwise only the most recent 100 are returned.</td></tr>
             </tbody>
         </table>
