@@ -2,93 +2,120 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title>Tree Status</title>
-    <link rel="stylesheet" type="text/css" href="/static/releng.css" />
+    <link rel="stylesheet" type="text/css" href="/static/style.css" />
 </head>
 <body>
-<h1>Trees</h1>
-{% if 'REMOTE_USER' in request.environ: -%}
-<form method="post" action="">
-<input type="hidden" name="token" value="{{token}}" />
-{% endif -%}
-<table>
-    <thead>
-        <tr><th>name</th><th>state</th><th>reason</th></tr>
-    </thead>
-    <tbody>
-{% for tree in trees -%}
-<tr>
-    <td>
-    {% if 'REMOTE_USER' in request.environ: -%}
-    <input type="checkbox" name="tree" value="{{tree.tree}}" />
-    {% endif -%}
-    <a href="/{{tree.tree|urlencode|urlencode}}">{{tree.tree}}</a>
-    </td>
-    <td>{{tree.status.upper()}}</td>
-    <td>{{tree.reason or ""}}</td>
-</tr>
-{% endfor -%}
-{% if 'REMOTE_USER' in request.environ: -%}
-    <tr>
-        <td valign="top">Modify selected trees</td>
-        <td valign="top">
-        <select name="status">
-            <option value="closed">Closed</option>
-            <option value="open">Open</option>
-            <option value="approval required">Approval Required</option>
-        </select>
-        </td>
-        <td><input type="text" name="reason" size="30" /><br/>
-            <input type="checkbox" name="tags" value="infra" id="infra" />
-            <label for="infra">infrastructure related</label><br/>
-            <input type="checkbox" name="remember" value="remember" id="remember" checked="checked" />
-            <label for="remember">remember previous state</label><br/>
-            <input type="submit" />
-        </td>
-    </tr>
-    <tr>
-        <td><input type="text" name="newtree" /></td>
-        <td><input type="submit" value="Add tree" /></td>
-    </tr>
-{% endif -%}
-    </tbody>
-</table>
-{% if 'REMOTE_USER' in request.environ: -%}
-</form>
-{% if stacks -%}
-<h2>Previous states</h2>
-{% for stack in stacks: -%}
-<form method="post" action="">
-<p>
-<input type="hidden" name="token" value="{{token}}" />
-<input type="hidden" name="restore" value="{{stack.id}}" />
-At {{stack.when.strftime("%Y-%m-%d %H:%M:%S")}}
-{{stack.who}} changed 
-{% for t in stack.trees -%}
-{%- if loop.index0 > 0 -%}
-, 
-{%- endif -%}
-{{t.tree}}
-{%- endfor %}
-to {{stack.status.upper()}} {{stack.reason}}
-<input type="submit" value="restore" />
-</p>
-</form>
-{% endfor -%}
-{% endif -%}
-{% endif -%}
+<div id="container">
+    <div id="main">
+      <span class="atRight">
+          {% if 'REMOTE_USER' in request.environ: -%}
+          {{request.environ['REMOTE_USER']}}
+          <a class="loginout" href="/logout">Logout</a> 
+          {% else: -%}
+          <a class="loginout" href="/login">Login</a>
+          {% endif -%}
+      </span>
+      <h1>TreeStatus</h1>
+      <div id="tableWrapper">
+          {% if 'REMOTE_USER' in request.environ: -%}
+          <form method="post" action="">
+              <input type="hidden" name="token" value="{{token}}" />
+          {% endif -%}
+              <table>
+                  <thead>
+                      <tr>
+                        {% if 'REMOTE_USER' in request.environ: -%}
+                        <th class="tableCheck"></th>
+                        {% endif -%}
+                        <th class="tableName">Name</th><th class="tableState">State</th><th class="tableReason">Reason</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {% for tree in trees -%}
+                      <tr>
+                          {% if 'REMOTE_USER' in request.environ: -%}
+                          <td class="tableCheck">
+                              <input type="checkbox" name="tree" value="{{tree.tree}}" />
+                          </td>
+                          {% endif -%}
+                          <td class="tableName">
+                              <a href="/{{tree.tree|urlencode|urlencode}}">{{tree.tree}}</a>
+                          </td>
+                          <td class="tableState {{tree.status.lower()}}">{{tree.status.upper()}}</td>
+                          <td class="tableReason">{{tree.reason or ""}}</td>
+                      </tr>
+                      {% endfor -%}
+                  </tbody>
+              </table>
 
-<p>
-<a href="/">All trees</a>
-<a href="/help">Help</a>
-<a href="https://github.com/catlee/treestatus">Source</a>
-{% if user and user.is_admin -%}
-<a href="/users">Manage Users</a>
-{% endif -%}
-{% if 'REMOTE_USER' in request.environ: -%}
-<a href="/logout">Logout</a> ({{request.environ['REMOTE_USER']}})
-{% else: -%}
-<a href="/login">Login</a>
-{% endif -%}
-</p>
+          {% if 'REMOTE_USER' in request.environ: -%}
+              <div id="modify">
+                  <h2>Modify selected trees</h2>
+                  <label for="status">New state:
+                      <select name="status">
+                          <option value="closed">Closed</option>
+                          <option value="open">Open</option>
+                          <option value="approval required">Approval Required</option>
+                      </select>
+                  </label>
+                  <label for="reason">Reason:
+                      <input type="text" name="reason" size="30" /><br/>
+                  </label>
+                  <label for="infra">Infrastructure related?
+                      <input type="checkbox" name="tags" value="infra" id="infra" />
+                  </label><br/>
+                  <label for="remember">Remember previous state
+                      <input type="checkbox" name="remember" value="remember" id="remember" checked="checked" />
+                  </label><br/>
+                  <span class="atRight"><input type="submit" value="Submit"/></span>
+              </div>
+              <div id="add">
+                  <label for="newtree">Add tree:
+                    <input type="text" name="newtree" />
+                   </label>
+                  <span class="atRight"><input type="submit" value="Add" /></span>
+              </div>
+          </form>
+      </div>
+      {% if stacks -%}
+      <div id="stacksWrapper">
+          <h2>Previous states</h2>
+          {% for stack in stacks: -%}
+          <form method="post" action="">
+              <p>
+                  <input type="hidden" name="token" value="{{token}}" />
+                  <input type="hidden" name="restore" value="{{stack.id}}" />
+                  At {{stack.when.strftime("%Y-%m-%d %H:%M:%S")}}
+                  {{stack.who}} changed 
+                  {% for t in stack.trees -%}
+                  {%- if loop.index0 > 0 -%}
+                  , 
+                  {%- endif -%}
+                  {{t.tree}}
+                  {%- endfor %}
+                  to {{stack.status.upper()}} {{stack.reason}}
+                  <input type="submit" value="restore" />
+                </p>
+            </form>
+            {% endfor -%}
+        </div>
+        {% endif -%}
+        {% endif -%}
+    </div>
+    <div id="footer">
+        <span class="footerWrapper">
+            <a href="/">All trees</a>
+            <a href="/help">Help</a>
+            <a href="https://github.com/catlee/treestatus">Source</a>
+            {% if user and user.is_admin -%}
+            <a href="/users">Manage Users</a>
+            {% endif -%}
+            {% if 'REMOTE_USER' in request.environ: -%}
+            <a href="/logout">Logout</a>
+            {% else: -%}
+            <a href="/login">Login</a>
+            {% endif -%}
+        </span>
+    </div>
 </body>
 </html>
