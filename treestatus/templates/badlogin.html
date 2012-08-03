@@ -2,18 +2,28 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title>Tree Status</title>
-    <link rel="stylesheet" type="text/css" href="/static/releng.css" />
+    <link rel="stylesheet" type="text/css" href="/static/style.css" />
 </head>
 <body>
-    <h1>Insufficient permissions</h1>
-    <p>
-    You do not have permission to login to this system
-    </p>
-    <p>
-    <a href="/">All trees</a>
-    <a href="/help">Help</a>
-    <a href="https://github.com/catlee/treestatus">Source</a>
-    <a href="/login">Login</a>
-    </p>
+    <div id="container">
+        <div id="main">
+            <span class="atRight">
+                <a class="loginout" href="/login">Login</a>
+            </span>
+            <h1>TreeStatus</h1>
+            <h2 class="error">Sorry!</h2>
+            <p class="error">
+                You do not have permission to login to this system.
+            </p>
+        </div>
+        <div id="footer">
+            <span class="footerWrapper">
+                <a href="/">All trees</a>
+                <a href="/help">Help</a>
+                <a href="https://github.com/catlee/treestatus">Source</a>
+                <a href="/login">Login</a>
+            </span>
+        </div>
+    </div>
 </body>
 </html>
