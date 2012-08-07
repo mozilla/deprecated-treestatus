@@ -1,0 +1,201 @@
+@font-face {
+    font-family: 'Open sans';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Open sans') url('/static/opensans.woff');
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+body {
+    background: url('/static/background.png') scroll repeat-x rgb(249, 249, 249) 0 0;
+    font-family: sans-serif;
+}
+
+h1, h2 {
+    color: rgb(72,72,72);
+    font-family: 'Open sans', sans-serif;
+    font-weight: bold;
+    text-align: center;
+}
+
+h1 {
+    font-size: 300%;
+}
+
+table {
+    margin-left: auto;
+    margin-right: auto;
+    border-collapse: collapse;
+    min-width: 720px;
+    margin-bottom: 40px;
+}
+
+thead {
+    background-color: #0095dd;
+    color: white;
+    font-family: 'Open sans', sans-serif;
+    text-align: left;
+}
+
+th {
+    padding: 5px;
+}
+
+tr {
+    border-top: 1px solid gray;
+}
+
+td {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+thead > tr {
+    border: none;
+}
+
+a {
+    color:#2983c8;
+    text-decoration:none
+}
+
+a:hover,a:active{
+    color:#20679e;
+    text-decoration:underline;
+}
+
+a:hover.loginout, a:active.loginout {
+    color: white;
+    text-decoration: none;
+}
+
+.error {
+    color: red;
+}
+
+p.error {
+    text-align: center;
+    color: black;
+}
+
+.tableCheck {
+    min-width: 20px;
+}
+
+.tableName {
+    min-width: 200px;
+}
+
+.tableState {
+    min-width: 100px;
+}
+
+.tableReason {
+    min-width: 400px;
+}
+
+.history .tableReason {
+    min-width: 200px;
+}
+
+.history td {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.tableTags {
+    min-width: 100px;
+}
+
+td.tableSheriff, td.tableAdmin {
+    text-align: center;
+}
+
+.open {
+    color: green;
+}
+
+.closed {
+    color: red;
+}
+
+.footerWrapper {
+    border-top: 1px solid gray;
+    padding-top: 5px;
+}
+
+.atRight {
+    float: right;
+}
+
+.help td {
+    border: 1px solid grey;
+    padding: 5px;
+}
+
+.loginout {
+    background-color: #0095dd;
+    color: white;
+    font-family: 'Open sans', sans-serif;
+    padding: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+#container {
+    min-height: 100%;
+    position: relative;
+}
+
+#main {
+    padding: 10px;
+    padding-bottom: 60px;
+}
+
+#stacksWrapper {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+#tableWrapper h2, #modify h2, #helpHeading{
+    text-align: left;
+}
+
+#tableWrapper div {
+    margin-top: 20px;
+    margin-bottom: 40px;
+}
+
+#modify {
+    display: table;
+    margin-left: auto;
+    margin-right: auto;
+    min-width: 720px;
+}
+
+#add {
+    display: table;
+    margin-left: auto;
+    margin-right: auto;
+    min-width: 720px;
+    padding: 10px;
+    background-color: #ffffe0;
+    border: 1px grey dashed;
+}
+
+h2#previous {
+    text-align: center;
+}
+
+#footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    height: 60px;
+}
