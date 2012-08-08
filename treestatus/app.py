@@ -279,6 +279,11 @@ def is_json():
         return True
     return False
 
+def wrap_json_headers(data):
+    response = jsonify(data)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
+
 def validate_write_request():
     who = request.environ.get('REMOTE_USER')
     if who is None:
@@ -306,7 +311,7 @@ def get_token():
 @app.route('/')
 def index():
     if is_json():
-        return jsonify(status.get_trees())
+        return wrap_json_headers(status.get_trees())
 
     trees = [t for t in status.get_trees().values()]
     trees.sort(key=lambda t: t['tree'])
@@ -380,7 +385,7 @@ def get_tree(tree):
         flask.abort(404)
 
     if is_json():
-        return jsonify(t)
+        return wrap_json_headers(t)
 
     resp = make_response(render_template('tree.html', tree=t, logs=status.get_logs(tree),
             loads=loads, token=get_token()))
@@ -402,7 +407,7 @@ def get_logs(tree):
         logs = status.get_logs(tree)
 
     if is_json():
-        resp = jsonify(dict(logs=logs))
+        resp = wrap_json_headers(dict(logs=logs))
     else:
         resp = make_response(dumps(logs, indent=2))
         resp.headers['Content-Type'] = 'text/plain'
