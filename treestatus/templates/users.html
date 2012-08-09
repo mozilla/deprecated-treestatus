@@ -3,6 +3,7 @@
 <head>
     <title>Tree Status</title>
     <link rel="stylesheet" type="text/css" href="/static/style.css" />
+    <script type="application/javascript" src="/static/deletebuttons.js"></script>
 </head>
 <body>
     <div id="container">
@@ -41,7 +42,7 @@
                                 <td class="tableSheriff"><input type="checkbox" name="sheriff" value="{{u.id}}" {{'checked=1' if u.is_sheriff else ''}}/></td>
                                 <td class="tableAdmin"><input type="checkbox" name="admin" value="{{u.id}}" {{'checked=1' if u.is_admin else ''}}/></td>
                                 <td class="tableDelete">
-                                    <input type="submit" name="delete:{{u.id}}" value="Delete" />
+                                    <button type="button" id="delete:{{u.id}}">Delete</button>
                                 <td/>
                             </tr>
                             {% endfor -%}
@@ -50,6 +51,9 @@
                     <div id="modify">
                         <span class="atRight"><input type="submit" value="Submit"/></span>
                     </div>
+                </form>
+                <form method="post" action="">
+                    <input type="hidden" name="token" value="{{token}}">
                     <div id="add">
                         <label for="newuser">Add user:
                           <input type="text" name="newuser" />
@@ -58,6 +62,10 @@
                     </div>
                 </form>
             </div>
+
+            <form id="deleteForm" class="none" method="post" action="">
+                <input type="hidden" name="token" value="{{token}}">
+            </form>
         </div>
 
         <div id="footer">
