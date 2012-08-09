@@ -74,6 +74,10 @@ a:hover.loginout, a:active.loginout {
     text-decoration: none;
 }
 
+.none {
+  display: none;
+}
+
 .error {
     color: red;
 }
