@@ -282,6 +282,7 @@ def is_json():
 def wrap_json_headers(data):
     response = jsonify(data)
     response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Cache-Control'] = 'no-cache'
     return response
 
 def validate_write_request():
