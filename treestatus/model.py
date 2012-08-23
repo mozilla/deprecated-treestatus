@@ -18,12 +18,14 @@ class DbTree(DbBase):
     tree = Column(String(32), primary_key=True)
     status = Column(String(64), default="open", nullable=False)
     reason = Column(String(256), default="", nullable=False)
+    message_of_the_day = Column(String(800), default="", nullable=False)
 
     def to_dict(self):
         return dict(
                 tree=self.tree,
                 status=self.status,
                 reason=self.reason,
+                message_of_the_day=self.message_of_the_day,
                 )
 
 class DbLog(DbBase):
