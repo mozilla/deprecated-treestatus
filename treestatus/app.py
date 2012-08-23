@@ -559,11 +559,11 @@ def update_tree(tree):
         flask.abort(400)
 
     # Update tree status
-    if 'reason' in request.form or 'status' in request.form:
-        tags = dumps(request.form.getlist('tags'))
-        status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags)
+    tags = dumps(request.form.getlist('tags'))
+    status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags)
 
-    if 'message' in request.form and request.form['message'] != t['message_of_the_day']:
+    # Update message of the day when required
+    if request.form['message'] != t['message_of_the_day']:
         status.set_motd(request.environ['REMOTE_USER'], tree, request.form['message'])
 
     return flask.redirect("/%s?nc" % tree, 303)
