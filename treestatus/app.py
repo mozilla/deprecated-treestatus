@@ -259,6 +259,15 @@ class Status:
             self._mcDelete('tree:%s' % tree)
             self._mcDelete('trees')
 
+    def set_motd(self, who, tree, message):
+        session = request.session
+        db_tree = session.query(model.DbTree).get(tree)
+        db_tree.message_of_the_day = message
+        self.log(tree, who, 'motd', message)
+        session.commit()
+        if self.memcache:
+            self._mcPut('tree:%s' % tree, db_tree.to_dict(), expires=60)
+
 status = Status()
 
 import flask
@@ -546,12 +555,17 @@ def update_tree(tree):
     if '_method' in request.form and request.form['_method'] == 'DELETE':
         return delete_tree(tree)
 
-    if not 'reason' in request.form or not 'status' in request.form:
+    if not 'reason' in request.form or not 'status' in request.form or not 'message' in request.form:
         flask.abort(400)
 
     # Update tree status
     tags = dumps(request.form.getlist('tags'))
     status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags)
+
+    # Update message of the day when required
+    if request.form['message'] != t['message_of_the_day']:
+        status.set_motd(request.environ['REMOTE_USER'], tree, request.form['message'])
+
     return flask.redirect("/%s?nc" % tree, 303)
 
 @app.route('/<path:tree>', methods=['DELETE'])

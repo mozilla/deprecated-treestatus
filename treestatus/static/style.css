@@ -74,6 +74,10 @@ a:hover.loginout, a:active.loginout {
     text-decoration: none;
 }
 
+form * {
+  vertical-align: middle;
+}
+
 .error {
     color: red;
 }
@@ -145,6 +149,10 @@ td.tableSheriff, td.tableAdmin {
     padding: 5px;
     margin-left: 5px;
     margin-right: 5px;
+}
+
+.submit {
+  margin-top: 5px;
 }
 
 #container {
