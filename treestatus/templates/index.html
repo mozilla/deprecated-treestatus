@@ -1,21 +1,6 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-    <title>Tree Status</title>
-    <link rel="stylesheet" type="text/css" href="/static/style.css" />
-</head>
-<body>
-<div id="container">
-    <div id="main">
-      <span class="atRight">
-          {% if 'REMOTE_USER' in request.environ: -%}
-          {{request.environ['REMOTE_USER']}}
-          <a class="loginout" href="/logout">Logout</a> 
-          {% else: -%}
-          <a class="loginout" href="/login">Login</a>
-          {% endif -%}
-      </span>
-      <h1>TreeStatus</h1>
+{% extends "template.html" %}
+{% block title %}Tree Status{% endblock %}
+{% block pageContent %}
       <div id="tableWrapper">
           {% if 'REMOTE_USER' in request.environ: -%}
           <form method="post" action="">
@@ -101,21 +86,4 @@
         </div>
         {% endif -%}
         {% endif -%}
-    </div>
-    <div id="footer">
-        <span class="footerWrapper">
-            <a href="/">All trees</a>
-            <a href="/help">Help</a>
-            <a href="https://github.com/catlee/treestatus">Source</a>
-            {% if user and user.is_admin -%}
-            <a href="/users">Manage Users</a>
-            {% endif -%}
-            {% if 'REMOTE_USER' in request.environ: -%}
-            <a href="/logout">Logout</a>
-            {% else: -%}
-            <a href="/login">Login</a>
-            {% endif -%}
-        </span>
-    </div>
-</body>
-</html>
+{% endblock %}
