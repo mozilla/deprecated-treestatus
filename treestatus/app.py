@@ -6,6 +6,7 @@ site.addsitedir(os.path.join(my_dir, "vendor/lib/python"))
 from datetime import datetime
 import urllib
 from binascii import b2a_base64
+import re
 
 from simplejson import dumps, loads
 import memcache
@@ -288,7 +289,17 @@ def is_json():
         return True
     return False
 
+def link_match(match):
+    return '<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=%s">%s</a>' % (match.group(1), match.group(0))
+
+def link_bugs(s):
+    return re.sub('bug\s+(\d{6,7})(?!\s*</a>)', link_match, s, flags=re.I)
+
 def wrap_json_headers(data):
+    if 'reason' in data:
+        data['reason'] = link_bugs(data['reason'])
+    if 'message_of_the_day' in data:
+        data['message_of_the_day'] = link_bugs(data['message_of_the_day'])
     response = jsonify(data)
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Cache-Control'] = 'no-cache'
