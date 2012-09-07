@@ -80,10 +80,12 @@
                   {%- endfor %}
                   to {{stack.status.upper()}} {{stack.reason}}
                   <input type="submit" value="restore" />
-                </p>
-            </form>
-            {% endfor -%}
-        </div>
-        {% endif -%}
-        {% endif -%}
+              </p>
+          </form>
+          {% endfor -%}
+      </div>
+      {% endif -%}
+      {% else: %}
+      </div>
+      {% endif -%}
 {% endblock %}

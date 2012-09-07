@@ -347,7 +347,7 @@ def help():
     else:
         user = None
 
-    resp = make_response(render_template('help.html'))
+    resp = make_response(render_template('help.html', user=user))
     resp.headers['Cache-Control'] = 'max-age=600'
     return resp
 
