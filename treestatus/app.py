@@ -342,7 +342,12 @@ def index():
 
 @app.route('/help')
 def help():
-    resp = make_response(render_template('help.html'))
+    if 'REMOTE_USER' in request.environ:
+        user = status.get_user(request.environ['REMOTE_USER'])
+    else:
+        user = None
+
+    resp = make_response(render_template('help.html', user=user))
     resp.headers['Cache-Control'] = 'max-age=600'
     return resp
 
@@ -357,7 +362,7 @@ def login():
     if not u or not (u.is_admin or u.is_sheriff):
         log.info("%s is not allowed", who)
         status.delete_token(who)
-        resp = make_response(render_template('badlogin.html'), 403)
+        resp = make_response(render_template('badlogin.html', user=None), 403)
         # Force the user to logout
         if 'repoze.who.api' in request.environ:
             repoze_api = request.environ['repoze.who.api']
@@ -397,8 +402,13 @@ def get_tree(tree):
     if is_json():
         return wrap_json_headers(t)
 
+    if 'REMOTE_USER' in request.environ:
+        user = status.get_user(request.environ['REMOTE_USER'])
+    else:
+        user = None
+
     resp = make_response(render_template('tree.html', tree=t, logs=status.get_logs(tree),
-            loads=loads, token=get_token()))
+            loads=loads, token=get_token(), user=user))
     resp.headers['Cache-Control'] = 'max-age=30'
     resp.headers['Vary'] = 'Cookie'
     if '?nc' in request.url:
