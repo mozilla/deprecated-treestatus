@@ -16,7 +16,7 @@
                 {% endif -%}
             </span>
             <h1>TreeStatus</h1>
-            <h2>{{tree.tree}} is <span class="{{tree.status.lower()}}">{{tree.status.upper()}}</span></h2><br/>
+            <h2>{{tree.tree}} is <span class="{{tree.status.lower().replace(" ", "_")}}">{{tree.status.upper()}}</span></h2><br/>
             {% if tree.reason: -%}
             <h2>Reason: {{tree.reason}}</h2>
             {% endif -%}

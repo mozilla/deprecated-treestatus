@@ -41,7 +41,7 @@
                           <td class="tableName">
                               <a href="/{{tree.tree|urlencode|urlencode}}">{{tree.tree}}</a>
                           </td>
-                          <td class="tableState {{tree.status.lower()}}">{{tree.status.upper()}}</td>
+                          <td class="tableState {{tree.status.lower().replace(" ", "_")}}">{{tree.status.upper()}}</td>
                           <td class="tableReason">{{tree.reason or ""}}</td>
                       </tr>
                       {% endfor -%}
