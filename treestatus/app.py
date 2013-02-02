@@ -1,11 +1,13 @@
-import os, site
-my_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-site.addsitedir(my_dir)
-site.addsitedir(os.path.join(my_dir, "vendor/lib/python"))
-
+import os
+import site
+import time
 from datetime import datetime
 import urllib
 from binascii import b2a_base64
+
+my_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+site.addsitedir(my_dir)
+site.addsitedir(os.path.join(my_dir, "vendor/lib/python"))
 
 from simplejson import dumps, loads
 import memcache
@@ -14,11 +16,14 @@ import sqlalchemy as sa
 
 import treestatus.model as model
 
+import flask
+from flask import Flask, request, make_response, render_template, jsonify
+
 import logging
 log = logging.getLogger(__name__)
 
-class Status:
 
+class Status:
     memcachePrefix = 'treestatus'
     defaultLogCache = 100
 
@@ -270,16 +275,17 @@ class Status:
 
 status = Status()
 
-import flask
-from flask import Flask, request, make_response, render_template, jsonify
 app = Flask(__name__)
+
 
 @app.template_filter('urlencode')
 def urlencode(s):
     return urllib.quote(s, '')
 
+
 def urldecode(s):
     return urllib.unquote(s)
+
 
 def is_json():
     if 'application/json' in request.headers.get('Accept', ''):
@@ -288,11 +294,13 @@ def is_json():
         return True
     return False
 
+
 def wrap_json_headers(data):
     response = jsonify(data)
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Cache-Control'] = 'no-cache'
     return response
+
 
 def validate_write_request():
     who = request.environ.get('REMOTE_USER')
@@ -313,10 +321,12 @@ def validate_write_request():
         log.info("User isn't allowed to do that")
         flask.abort(403)
 
+
 def get_token():
     if 'REMOTE_USER' in request.environ:
         return status.get_token(request.environ['REMOTE_USER'])
     return ''
+
 
 @app.route('/')
 def index():
@@ -340,11 +350,13 @@ def index():
         resp.headers['Cache-Control'] = 'no-cache'
     return resp
 
+
 @app.route('/help')
 def help():
     resp = make_response(render_template('help.html'))
     resp.headers['Cache-Control'] = 'max-age=600'
     return resp
+
 
 @app.route('/login')
 def login():
@@ -372,6 +384,7 @@ def login():
     resp.headers['X-Treestatus-Token'] = token
     return resp
 
+
 @app.route('/logout')
 def logout():
     if 'REMOTE_USER' in request.environ:
@@ -387,6 +400,7 @@ def logout():
         flask.abort(401)
     return flask.redirect('/?nc', 303)
 
+
 @app.route('/<path:tree>', methods=['GET'])
 def get_tree(tree):
     tree = urldecode(tree)
@@ -398,12 +412,13 @@ def get_tree(tree):
         return wrap_json_headers(t)
 
     resp = make_response(render_template('tree.html', tree=t, logs=status.get_logs(tree),
-            loads=loads, token=get_token()))
+                         loads=loads, token=get_token()))
     resp.headers['Cache-Control'] = 'max-age=30'
     resp.headers['Vary'] = 'Cookie'
     if '?nc' in request.url:
         resp.headers['Cache-Control'] = 'no-cache'
     return resp
+
 
 @app.route('/<path:tree>/logs', methods=['GET'])
 def get_logs(tree):
@@ -424,6 +439,7 @@ def get_logs(tree):
     resp.headers['Cache-Control'] = 'max-age=30'
     return resp
 
+
 @app.route('/users', methods=['GET'])
 def show_users():
     if 'REMOTE_USER' not in request.environ:
@@ -442,6 +458,7 @@ def show_users():
     if '?nc' in request.url:
         resp.headers['Cache-Control'] = 'no-cache'
     return resp
+
 
 @app.route('/users', methods=['POST'])
 def modify_users():
@@ -515,6 +532,7 @@ def modify_users():
 
     return flask.redirect('/users?nc', 303)
 
+
 @app.route('/', methods=['POST'])
 def add_or_set_trees():
     validate_write_request()
@@ -544,6 +562,7 @@ def add_or_set_trees():
             status.add_tree(request.environ['REMOTE_USER'], request.form['newtree'])
     return flask.redirect('/?nc', 303)
 
+
 @app.route('/<path:tree>', methods=['POST'])
 def update_tree(tree):
     validate_write_request()
@@ -568,6 +587,7 @@ def update_tree(tree):
 
     return flask.redirect("/%s?nc" % tree, 303)
 
+
 @app.route('/<path:tree>', methods=['DELETE'])
 def delete_tree(tree):
     validate_write_request()
@@ -585,12 +605,14 @@ def delete_tree(tree):
     status.del_tree(request.environ['REMOTE_USER'], tree, request.form['reason'])
     return flask.redirect("/" + tree, 303)
 
+
 @app.before_request
 def create_session():
     request.session = model.Session()
 
-import os, time
 _started = time.asctime()
+
+
 @app.after_request
 def close_session(response):
     request.session.close()
@@ -598,10 +620,14 @@ def close_session(response):
     response.headers['x-started'] = str(_started)
     return response
 
-@app.errorhandler(sa.exc.InvalidRequestError)
+
+@app.errorhandler(sa.exc.SQLAlchemyError)
 def handle_db_error(e):
+    # Try again?
+    log.warning("Unhandled DB error; trying request again", exc_info=True)
     request.session.close()
-    raise e
+    return app.dispatch_request()
+
 
 def wsgiapp(config, **kwargs):
     config.update(kwargs)
