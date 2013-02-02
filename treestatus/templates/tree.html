@@ -20,6 +20,9 @@
             {% if tree.reason: -%}
             <h2>Reason: {{tree.reason}}</h2>
             {% endif -%}
+            {% if tree.message_of_the_day -%}
+            <h3>{{tree.message_of_the_day}}</h3>
+            {% endif -%}
             {% if 'REMOTE_USER' in request.environ: -%}
             <div id="modify">
                 <h2>Modify this tree</h2>
