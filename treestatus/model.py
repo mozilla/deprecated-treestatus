@@ -1,7 +1,16 @@
+import os
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import scoped_session, sessionmaker, relation
+from sqlalchemy.engine.reflection import Inspector
+import migrate.versioning.api
+import migrate.exceptions
+import logging
+
+log = logging.getLogger(__name__)
+
+migrate_schema = os.path.normpath(os.path.join(os.path.dirname(__file__), '../schema'))
 
 DbBase = declarative_base()
 
@@ -9,6 +18,25 @@ Session = None
 
 def setup(config):
     engine = sa.engine_from_config(config, pool_recycle=60)
+    # Make sure we're up-to-date
+    try:
+        version = migrate.versioning.api.db_version(engine, migrate_schema)
+        log.info("our db schema version is %s", version)
+    except migrate.exceptions.DatabaseNotControlledError:
+        # Our DB isn't under version control yet
+        # Put it under version control
+        # If we have a 'trees' table, it's version 1, otherwise we're version 0
+        insp = Inspector.from_engine(engine)
+        if "trees" in insp.get_table_names():
+            version = 1
+        else:
+            version = 0
+        log.info("putting tables under version control starting with version %s", version)
+        migrate.versioning.api.version_control(engine, migrate_schema, version)
+    version = migrate.versioning.api.upgrade(engine, migrate_schema)
+    if version:
+        log.info("upgraded db schema to %s", version)
+
     DbBase.metadata.bind = engine
     global Session
     Session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))

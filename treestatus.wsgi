@@ -9,9 +9,10 @@ import treestatus.app, treestatus.model as model
 
 application = treestatus.app.wsgiapp({
     'here': os.curdir,
-    'sqlalchemy.url': 'sqlite:///treestatus.db',
+    'sqlalchemy.url': 'mysql://treestatus@localhost/treestatus',
+    #'sqlalchemy.url': 'sqlite:///treestatus.db',
+    'memcached.servers': 'localhost:11211',
     'debug': False,
 })
 
-# Create any db tables we need
-model.DbBase.metadata.create_all()
+application.run()

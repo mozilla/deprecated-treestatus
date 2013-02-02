@@ -13,6 +13,3 @@ application = treestatus.app.wsgiapp({
     'memcached.servers': 'localhost:11211',
     'debug': False,
 })
-
-# Create any db tables we need
-model.DbBase.metadata.create_all()
