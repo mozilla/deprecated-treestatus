@@ -10,7 +10,7 @@
       <span class="atRight">
           {% if 'REMOTE_USER' in request.environ: -%}
           {{request.environ['REMOTE_USER']}}
-          <a class="loginout" href="/logout">Logout</a> 
+          <a class="loginout" href="/logout">Logout</a>
           {% else: -%}
           <a class="loginout" href="/login">Login</a>
           {% endif -%}
@@ -42,7 +42,7 @@
                               <a href="/{{tree.tree|urlencode|urlencode}}">{{tree.tree}}</a>
                           </td>
                           <td class="tableState {{tree.status.lower().replace(" ", "_")}}">{{tree.status.upper()}}</td>
-                          <td class="tableReason">{{tree.reason or ""}}</td>
+                          <td class="tableReason">{{tree.reason|sanitize or ""}}</td>
                       </tr>
                       {% endfor -%}
                   </tbody>
@@ -86,10 +86,10 @@
                   <input type="hidden" name="token" value="{{token}}" />
                   <input type="hidden" name="restore" value="{{stack.id}}" />
                   At {{stack.when.strftime("%Y-%m-%d %H:%M:%S")}}
-                  {{stack.who}} changed 
+                  {{stack.who}} changed
                   {% for t in stack.trees -%}
                   {%- if loop.index0 > 0 -%}
-                  , 
+                  ,
                   {%- endif -%}
                   {{t.tree}}
                   {%- endfor %}
