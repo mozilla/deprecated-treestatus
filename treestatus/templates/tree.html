@@ -3,6 +3,23 @@
 <head>
     <title>{{tree.tree}} - {{tree.status}}</title>
     <link rel="stylesheet" type="text/css" href="/static/style.css" />
+    <script type="application/javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        function restoreState(event) {
+            var row = event.target.parentElement.parentElement;
+            var state = row.querySelector(".tableState").textContent.trim();
+            var reason = row.querySelector(".tableReason").innerHTML.trim();
+            var infra = /\binfra\b/.test(row.querySelector(".tableTags").textContent);
+            document.querySelector("[name=status]").value = state;
+            document.querySelector("[name=reason]").value = reason;
+            document.getElementById("infra").checked = infra;
+        }
+        var restoreButtons = document.querySelectorAll(".restore");
+        for (var i = 0; i < restoreButtons.length; ++i) {
+            restoreButtons[i].addEventListener("click", restoreState);
+        }
+    });
+    </script>
 </head>
 <body>
     <div id="container">
@@ -58,6 +75,7 @@
                           <th class="tableState">Action</th>
                           <th class="tableReason">Reason</th>
                           <th class="tableTags">Tags</th>
+                          <th class="tableRestore">Restore</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -77,6 +95,9 @@
                             </td>
                             <td class="tableTags">
                                 {{", ".join(log.tags)}}
+                            </td>
+                            <td class="tableRestore">
+                                <button class="restore">Restore</button>
                             </td>
                         </tr>
                         {% endfor -%}
