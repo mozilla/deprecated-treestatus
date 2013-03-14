@@ -4,6 +4,9 @@ Tree Status
 This is a simple wsgi app to maintain the open/closed state of development
 trees. It has a simple REST API, and a horrible web interface.
 
+Bugs can be filed at:
+https://bugzilla.mozilla.org/enter_bug.cgi?product=Webtools&component=Tree%20Status
+
 Deployment
 ==========
 python setup.py install
