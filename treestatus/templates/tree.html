@@ -64,7 +64,7 @@
                         {% for log in logs: -%}
                         <tr>
                             <td class="tableWho">
-                                {{log.who}}
+                                {{log.who|obfuscate}}
                             </td>
                             <td class="tableWhen">
                                 {{log.when}}
