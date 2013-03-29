@@ -64,7 +64,11 @@
                         {% for log in logs: -%}
                         <tr>
                             <td class="tableWho">
+                            {% if 'REMOTE_USER' in request.environ: -%}
                                 {{log.who|obfuscate}}
+                            {% else -%}
+                                {{log.who}}
+                            {% endif -%}
                             </td>
                             <td class="tableWhen">
                                 {{log.when}}
