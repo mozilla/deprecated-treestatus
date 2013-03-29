@@ -290,7 +290,7 @@ def urldecode(s):
 @app.template_filter('obfuscate')
 def obfuscate(s):
     part = s.partition('@')
-    return part[0][:3] + "..." + part[2][4:]
+    return part[0][:]
 
 def is_json():
     if 'application/json' in request.headers.get('Accept', ''):
