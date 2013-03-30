@@ -287,6 +287,11 @@ def urldecode(s):
     return urllib.unquote(s)
 
 
+@app.template_filter('obfuscate')
+def obfuscate(s):
+    part = s.partition('@')
+    return part[0]
+
 def is_json():
     if 'application/json' in request.headers.get('Accept', ''):
         return True
