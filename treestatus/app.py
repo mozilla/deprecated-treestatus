@@ -638,3 +638,9 @@ def wsgiapp(config, **kwargs):
     app.wsgi_app = make_middleware_with_config(app.wsgi_app, config, config.get('who_config', configfile))
     logging.basicConfig(level=logging.DEBUG)
     return app
+
+
+@app.template_filter('trimspaces')
+def trimspaces(s):
+    return s.strip()
+

@@ -35,13 +35,13 @@
                         </select>
                     </label>
                     <label for="reason">Reason:
-                        <input type="text" name="reason" size="30" value="{{tree.reason}}"/><br />
+                        <input type="text" name="reason" size="30" value="{{tree.reason|trimspaces}}"/><br />
                     </label>
                     <label for="infra">Infrastructure related?
                         <input type="checkbox" name="tags" value="infra" id="infra" />
                     </label><br/>
                     <label for="message">MOTD
-                        <textarea name="message" id="message" cols="95">{{tree.message_of_the_day}}</textarea>
+                        <textarea name="message" id="message" cols="95">{{tree.message_of_the_day|trimspaces}}</textarea>
                     </label><br/>
                     <input type="hidden" name="token" value="{{token}}" />
                     <span class="atRight"><input class="submit" type="submit" value="Submit"/></span>
