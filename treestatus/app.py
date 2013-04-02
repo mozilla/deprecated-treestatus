@@ -643,4 +643,3 @@ def wsgiapp(config, **kwargs):
 @app.template_filter('trimspaces')
 def trimspaces(s):
     return s.strip()
-
