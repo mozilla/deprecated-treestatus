@@ -2,18 +2,35 @@ Tree Status
 ===========
 
 This is a simple wsgi app to maintain the open/closed state of development
-trees. It has a simple REST API, and a horrible web interface.
+trees. It has a simple REST API, and a friendly web interface.
 
 Bugs can be filed at:
 https://bugzilla.mozilla.org/enter_bug.cgi?product=Webtools&component=Tree%20Status
 
 Deployment
 ==========
-python setup.py install
+The vendor library should contain all the pure python dependencies required.
+The vendor library is provided as a git submodule. To check this out run
 
-edit who.ini to your liking. in particular, audiences should match the public
-url of the site. secret should also be changed to something random.
+    git submodule update --init vendor
+
+It's recommended to create a new virtual environment to install the compiled
+dependencies.
+
+    pip install -r requirements/compiled.txt
+
+Edit who.ini to your liking. in particular, audiences should match the public
+url of the site. NB that http://127.0.0.1 is not treated the same as
+http://localhost for testing!  secret should also be changed to something
+random.
 
 python testapp.py for local testing
 
-treestatus.wsgi can be used as a template for wsgi deployments
+treestatus.wsgi-dist can be used as a template for wsgi deployments
+
+You will need to create an account for yourself in whichever database you have
+created. For example, with the default testapp.py settings you would have a
+database created called treestatus.db. You would then use the sqlite3 command
+to add an account for yourself:
+
+    sqlite3 treestatus.db "insert into users (name, is_admin, is_sheriff) values ('me@example.com', 1, 1)"
