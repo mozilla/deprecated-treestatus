@@ -180,7 +180,7 @@ class Status:
         session = request.session
         db_tree = session.query(model.DbTree).get(tree)
         db_tree.status = status
-        db_tree.reason = trimspaces(reason)
+        db_tree.reason = reason.strip()
         if flush_stack:
             for s in session.query(model.DbStatusStackTree).filter_by(tree=tree):
                 stack = s.stack
@@ -267,7 +267,7 @@ class Status:
     def set_motd(self, who, tree, message):
         session = request.session
         db_tree = session.query(model.DbTree).get(tree)
-        db_tree.message_of_the_day = trimspaces(message)
+        db_tree.message_of_the_day = message.strip()
         self.log(tree, who, 'motd', message)
         session.commit()
         if self.memcache:
@@ -639,7 +639,3 @@ def wsgiapp(config, **kwargs):
     logging.basicConfig(level=logging.DEBUG)
     return app
 
-
-@app.template_filter('trimspaces')
-def trimspaces(s):
-    return s.strip()
