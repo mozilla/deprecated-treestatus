@@ -51,6 +51,10 @@
           {% if 'REMOTE_USER' in request.environ: -%}
               <div id="modify">
                   <h2>Modify selected trees</h2>
+                  <ul>
+                     <li>Please indicate reason for closure, preferably with a bug link.</li>
+                     <li>Please indicate conditions for reopening, especially if you might disappear before reopening the tree yourself.</li>
+                  </ul>
                   <label for="status">New state:
                       <select name="status">
                           <option value="closed">Closed</option>
