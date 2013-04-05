@@ -267,7 +267,7 @@ class Status:
     def set_motd(self, who, tree, message):
         session = request.session
         db_tree = session.query(model.DbTree).get(tree)
-        db_tree.message_of_the_day = message
+        db_tree.message_of_the_day = trimspaces(message)
         self.log(tree, who, 'motd', message)
         session.commit()
         if self.memcache:
