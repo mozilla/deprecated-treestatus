@@ -180,7 +180,7 @@ class Status:
         session = request.session
         db_tree = session.query(model.DbTree).get(tree)
         db_tree.status = status
-        db_tree.reason = reason
+        db_tree.reason = trimspaces(reason)
         if flush_stack:
             for s in session.query(model.DbStatusStackTree).filter_by(tree=tree):
                 stack = s.stack
