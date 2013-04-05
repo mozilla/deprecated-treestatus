@@ -537,6 +537,58 @@ def modify_users():
 
     return flask.redirect('/users?nc', 303)
 
+@app.route('/mtree', methods=['GET'])
+def show_trees():
+    if 'REMOTE_USER' not in request.environ:
+        log.debug("not logged in")
+        flask.abort(403)
+
+    u = status.get_user(request.environ['REMOTE_USER'])
+    if not u or not u.is_admin:
+        log.debug("%s is not an admin", u)
+        flask.abort(403)
+
+    treesList = request.session.query(model.DbTree)
+    resp = make_response(render_template('mtree.html', user=u, trees=treesList, token=get_token()))
+    resp.headers['Cache-Control'] = 'max-age=30'
+    resp.headers['Vary'] = 'Cookie'
+    if '?nc' in request.url:
+        resp.headers['Cache-Control'] = 'no-cache'
+    return resp
+
+@app.route('/mtree', methods=['POST'])
+def modify_tree():
+    if 'REMOTE_USER' not in request.environ:
+        flask.abort(403)
+
+    admin = status.get_user(request.environ['REMOTE_USER'])
+    if not admin or not admin.is_admin:
+        flask.abort(403)
+    
+    validate_write_request()
+
+    session = request.session
+
+    log.info("form data: %s", request.form)
+
+    # Delete tree 
+    for k in request.form.keys():
+        if not k.startswith("delete:"):
+            continue
+        treeName = k[len("delete:"):]
+        t = session.query(model.DbTree).filter_by(tree=treeName).one()
+        if t:
+            log.info("%s is deleting %s", admin.name, t.tree)
+            status.del_tree(request.environ['REMOTE_USER'], t.tree,'')
+
+    # Add tree 
+    if request.form.get('newtree'):
+        if request.form['newtree'] not in status.get_trees():
+            # We don't have this yet, so go create it!
+            status.add_tree(request.environ['REMOTE_USER'], request.form['newtree'])
+
+    return flask.redirect('/mtree?nc', 303)
+
 
 @app.route('/', methods=['POST'])
 def add_or_set_trees():

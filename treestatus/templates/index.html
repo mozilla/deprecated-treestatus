@@ -109,6 +109,7 @@
             <a href="https://github.com/mozilla/treestatus">Source</a>
             {% if user and user.is_admin -%}
             <a href="/users">Manage Users</a>
+            <a href="/mtree">Manage Trees</a>
             {% endif -%}
             {% if 'REMOTE_USER' in request.environ: -%}
             <a href="/logout">Logout</a>
