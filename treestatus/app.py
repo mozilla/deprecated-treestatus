@@ -180,7 +180,7 @@ class Status:
         session = request.session
         db_tree = session.query(model.DbTree).get(tree)
         db_tree.status = status
-        db_tree.reason = reason
+        db_tree.reason = reason.strip()
         if flush_stack:
             for s in session.query(model.DbStatusStackTree).filter_by(tree=tree):
                 stack = s.stack
@@ -267,7 +267,7 @@ class Status:
     def set_motd(self, who, tree, message):
         session = request.session
         db_tree = session.query(model.DbTree).get(tree)
-        db_tree.message_of_the_day = message
+        db_tree.message_of_the_day = message.strip()
         self.log(tree, who, 'motd', message)
         session.commit()
         if self.memcache:
@@ -643,3 +643,4 @@ def wsgiapp(config, **kwargs):
     app.wsgi_app = make_middleware_with_config(app.wsgi_app, config, config.get('who_config', configfile))
     logging.basicConfig(level=logging.DEBUG)
     return app
+
