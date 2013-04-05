@@ -1,3 +1,3 @@
 [submodule "vendor"]
 	path = vendor
-	url = https://github.com/catlee/treestatus-lib.git
+	url = https://github.com/mozilla/treestatus-lib.git
