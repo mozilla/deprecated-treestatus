@@ -33,6 +33,7 @@
                                 <td class="tableTree">{{t.tree}}</td>
                                 <td class="tableState" {{t.status.lower().replace(" ","_")}}">{{t.status.upper()}}</td>
                                 <td class="tableDelete">
+                                    <input type="checkbox" name="delCheck" value="{{t.tree}}"/>
                                     <input type="submit" name="delete:{{t.tree}}" value="Delete" />
                                 <td/>
                             </tr>
