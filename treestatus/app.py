@@ -577,9 +577,10 @@ def modify_tree():
             continue
         treeName = k[len("delete:"):]
         t = session.query(model.DbTree).filter_by(tree=treeName).one()
-        if t:
-            log.info("%s is deleting %s", admin.name, t.tree)
-            status.del_tree(request.environ['REMOTE_USER'], t.tree,'')
+        for tree in request.form.getlist('delCheck'):
+           if t and tree == t.tree:
+              log.info("%s is deleting %s", admin.name, t.tree)
+              status.del_tree(request.environ['REMOTE_USER'], t.tree,'')
 
     # Add tree
     if request.form.get('newtree'):
