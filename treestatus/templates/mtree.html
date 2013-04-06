@@ -25,7 +25,8 @@
                             <tr>
                               <th class="tableTree">Name</th>
                               <th class="tableStatus">Status</th>
-                              <th class="tableDelete"></th></tr>
+                              <th class="tableDelete"></th>
+                              <th class="tableDelConf">Confirm?</th></tr>
                         </thead>
                         <tbody>
                             {% for t in trees -%}
@@ -33,9 +34,11 @@
                                 <td class="tableTree">{{t.tree}}</td>
                                 <td class="tableState" {{t.status.lower().replace(" ","_")}}">{{t.status.upper()}}</td>
                                 <td class="tableDelete">
-                                    <input type="checkbox" name="delCheck" value="{{t.tree}}"/>
                                     <input type="submit" name="delete:{{t.tree}}" value="Delete" />
-                                <td/>
+                                </td>
+                                <td class="tableDelConf">
+                                    <input type="checkbox" name="delCheck" value="{{t.tree}}"/>
+                                </td>
                             </tr>
                             {% endfor -%}
                         </tbody>                     

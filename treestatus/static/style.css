@@ -217,5 +217,9 @@ h2#previous {
 }
 
 .tableDelete {
+    text-align: right;
+}
+
+.tableDelConf {
     text-align: center;
 }
