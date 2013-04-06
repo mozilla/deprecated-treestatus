@@ -564,14 +564,14 @@ def modify_tree():
     admin = status.get_user(request.environ['REMOTE_USER'])
     if not admin or not admin.is_admin:
         flask.abort(403)
-    
+
     validate_write_request()
 
     session = request.session
 
     log.info("form data: %s", request.form)
 
-    # Delete tree 
+    # Delete tree
     for k in request.form.keys():
         if not k.startswith("delete:"):
             continue
@@ -581,7 +581,7 @@ def modify_tree():
             log.info("%s is deleting %s", admin.name, t.tree)
             status.del_tree(request.environ['REMOTE_USER'], t.tree,'')
 
-    # Add tree 
+    # Add tree
     if request.form.get('newtree'):
         if request.form['newtree'] not in status.get_trees():
             # We don't have this yet, so go create it!
