@@ -16,43 +16,36 @@
                 {% endif -%}
             </span>
             <h1>TreeStatus</h1>
-            <h2>Manage Users</h2>
+            <h2>Manage Trees</h2>
             <div id="tableWrapper">
                 <form method="post" action="">
                     <input type="hidden" name="token" value="{{token}}">
                     <table>
                         <thead>
                             <tr>
-                              <th class="tableWho">Email</th>
-                              <th class="tableSheriff">Sheriff?</th>
-                              <th class="tableAdmin">Admin?</th>
-                              <th class="tableDelete"></th></tr>
+                              <th class="tableTree">Name</th>
+                              <th class="tableStatus">Status</th>
+                              <th class="tableDelete"></th>
+                              <th class="tableDelConf">Confirm?</th></tr>
                         </thead>
                         <tbody>
-                            {% for u in users -%}
+                            {% for t in trees -%}
                             <tr>
-                                <td class="tableWho">{{u.name}}</td>
-                                {% if u.is_sheriff -%}
-                                <input type="hidden" name="was_sheriff" value="{{u.id}}"/>
-                                {% endif -%}
-                                {% if u.is_admin -%}
-                                <input type="hidden" name="was_admin" value="{{u.id}}"/>
-                                {% endif -%}
-                                <td class="tableSheriff"><input type="checkbox" name="sheriff" value="{{u.id}}" {{'checked=1' if u.is_sheriff else ''}}/></td>
-                                <td class="tableAdmin"><input type="checkbox" name="admin" value="{{u.id}}" {{'checked=1' if u.is_admin else ''}}/></td>
+                                <td class="tableTree">{{t.tree}}</td>
+                                <td class="tableState" {{t.status.lower().replace(" ","_")}}">{{t.status.upper()}}</td>
                                 <td class="tableDelete">
-                                    <input type="submit" name="delete:{{u.id}}" value="Delete" />
-                                <td/>
+                                    <input type="submit" name="delete:{{t.tree}}" value="Delete" />
+                                </td>
+                                <td class="tableDelConf">
+                                    <input type="checkbox" name="delCheck" value="{{t.tree}}"/>
+                                </td>
                             </tr>
                             {% endfor -%}
                         </tbody>                     
                     </table>
-                    <div id="modify">
-                        <span class="atRight"><input type="submit" value="Submit"/></span>
-                    </div>
                     <div id="add">
-                        <label for="newuser">Add user:
-                          <input type="text" name="newuser" />
+                        <label for="newtree">Add Tree:
+                          <input type="text" name="newtree" />
                          </label>
                         <span class="atRight"><input type="submit" value="Add" /></span>
                     </div>
