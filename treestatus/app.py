@@ -292,6 +292,7 @@ def obfuscate(s):
     part = s.partition('@')
     return part[0]
 
+
 def is_json():
     if 'application/json' in request.headers.get('Accept', ''):
         return True
@@ -537,6 +538,7 @@ def modify_users():
 
     return flask.redirect('/users?nc', 303)
 
+
 @app.route('/mtree', methods=['GET'])
 def show_trees():
     if 'REMOTE_USER' not in request.environ:
@@ -555,6 +557,7 @@ def show_trees():
     if '?nc' in request.url:
         resp.headers['Cache-Control'] = 'no-cache'
     return resp
+
 
 @app.route('/mtree', methods=['POST'])
 def modify_tree():
@@ -578,9 +581,9 @@ def modify_tree():
         treeName = k[len("delete:"):]
         t = session.query(model.DbTree).filter_by(tree=treeName).one()
         for tree in request.form.getlist('delCheck'):
-           if t and tree == t.tree:
-              log.info("%s is deleting %s", admin.name, t.tree)
-              status.del_tree(request.environ['REMOTE_USER'], t.tree,'')
+            if t and tree == t.tree:
+                log.info("%s is deleting %s", admin.name, t.tree)
+                status.del_tree(request.environ['REMOTE_USER'], t.tree, '')
 
     # Add tree
     if request.form.get('newtree'):
@@ -696,4 +699,3 @@ def wsgiapp(config, **kwargs):
     app.wsgi_app = make_middleware_with_config(app.wsgi_app, config, config.get('who_config', configfile))
     logging.basicConfig(level=logging.DEBUG)
     return app
-

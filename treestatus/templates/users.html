@@ -10,7 +10,7 @@
             <span class="atRight">
                 {% if 'REMOTE_USER' in request.environ: -%}
                 {{request.environ['REMOTE_USER']}}
-                <a class="loginout" href="/logout">Logout</a> 
+                <a class="loginout" href="/logout">Logout</a>
                 {% else: -%}
                 <a class="loginout" href="/login">Login</a>
                 {% endif -%}
@@ -45,7 +45,7 @@
                                 <td/>
                             </tr>
                             {% endfor -%}
-                        </tbody>                     
+                        </tbody>
                     </table>
                     <div id="modify">
                         <span class="atRight"><input type="submit" value="Submit"/></span>
