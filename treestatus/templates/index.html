@@ -73,12 +73,6 @@
                   </label><br/>
                   <span class="atRight"><input type="submit" value="Submit"/></span>
               </div>
-              <div id="add">
-                  <label for="newtree">Add tree:
-                    <input type="text" name="newtree" />
-                   </label>
-                  <span class="atRight"><input type="submit" value="Add" /></span>
-              </div>
           </form>
       </div>
       {% if stacks -%}
@@ -113,6 +107,7 @@
             <a href="https://github.com/mozilla/treestatus">Source</a>
             {% if user and user.is_admin -%}
             <a href="/users">Manage Users</a>
+            <a href="/mtree">Manage Trees</a>
             {% endif -%}
             {% if 'REMOTE_USER' in request.environ: -%}
             <a href="/logout">Logout</a>

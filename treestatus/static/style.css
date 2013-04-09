@@ -103,6 +103,10 @@ p.error {
     min-width: 400px;
 }
 
+.tableTree {
+    min-width: 200px;
+}
+
 .history .tableReason {
     min-width: 200px;
 }
@@ -210,4 +214,12 @@ h2#previous {
     width: 100%;
     text-align: center;
     height: 60px;
+}
+
+.tableDelete {
+    text-align: right;
+}
+
+.tableDelConf {
+    text-align: center;
 }
