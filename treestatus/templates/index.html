@@ -35,7 +35,7 @@ function toggle(source) {
                       <tr>
                         {% if 'REMOTE_USER' in request.environ: -%}
                         <th class="tableCheck">
-                          <input type="checkbox" onclick="toggle(this)"  value="checkAll"/></th>
+                          <input type="checkbox" onclick="toggle(this)"  name="checkAll"/></th>
                         {% endif -%}
                         <th class="tableName">Name</th><th class="tableState">State</th><th class="tableReason">Reason</th>
                       </tr>
