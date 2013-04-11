@@ -622,14 +622,6 @@ def add_or_set_trees():
             # We don't have this yet, so go create it!
             status.add_tree(request.environ['REMOTE_USER'], request.form['newtree'])
 
-    if request.form.get('checkAll'):
-       trees = request.form.getlist('tree')
-       for tree in trees:
-          log.info("%s is setting %s to %s because %s",
-                   request.environ['REMOTE_USER'],
-                   tree, request.form['status'],
-                   request.form['reason'])
-
     return flask.redirect('/?nc', 303)
 
 
