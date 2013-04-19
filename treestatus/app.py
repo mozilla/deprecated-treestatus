@@ -497,8 +497,12 @@ def modify_users():
         u.name = request.form.get('newuser')
         u.is_admin = False
         u.is_sheriff = False
-        log.info("%s is creating user %s", admin.name, u.name)
-        session.add(u)
+        userFound = model.DbUser.get(u.name) 
+        if userFound:
+           log.info("User exists.")
+        else:
+           log.info("%s is creating user %s", admin.name, u.name)
+           session.add(u)
 
     # Remove admin privs
     for uid in request.form.getlist('was_admin'):
