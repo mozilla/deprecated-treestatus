@@ -625,6 +625,7 @@ def add_or_set_trees():
         if request.form['newtree'] not in status.get_trees():
             # We don't have this yet, so go create it!
             status.add_tree(request.environ['REMOTE_USER'], request.form['newtree'])
+
     return flask.redirect('/?nc', 303)
 
 

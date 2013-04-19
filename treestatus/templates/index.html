@@ -5,6 +5,15 @@
     <link rel="stylesheet" type="text/css" href="/static/style.css" />
 </head>
 <body>
+{% if 'REMOTE_USER' in request.environ: -%}
+<script language="JavaScript">
+function toggle(source) {
+  checkboxes = document.getElementsByName('tree');
+  for each(var checkbox in checkboxes)
+    checkbox.checked = source.checked;
+}
+</script>
+{% endif -%}
 <div id="container">
     <div id="main">
       <span class="atRight">
@@ -25,7 +34,8 @@
                   <thead>
                       <tr>
                         {% if 'REMOTE_USER' in request.environ: -%}
-                        <th class="tableCheck"></th>
+                        <th class="tableCheck">
+                          <input type="checkbox" onclick="toggle(this)"  name="checkAll"/></th>
                         {% endif -%}
                         <th class="tableName">Name</th><th class="tableState">State</th><th class="tableReason">Reason</th>
                       </tr>
