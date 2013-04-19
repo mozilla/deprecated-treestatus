@@ -498,7 +498,7 @@ def modify_users():
         u.is_admin = False
         u.is_sheriff = False
         userFound = model.DbUser.get(u.name) 
-        if uFound:
+        if userFound:
            log.info("User exists.")
         else:
            log.info("%s is creating user %s", admin.name, u.name)
