@@ -497,13 +497,7 @@ def modify_users():
         u.name = request.form.get('newuser')
         u.is_admin = False
         u.is_sheriff = False
-        uFound = False
-        users = request.session.query(model.DbUser)
-        for t in users:
-            if t.name == u.name:
-               uFound = True
-               break;
-       
+        userFound = model.DbUser.get(u.name) 
         if uFound:
            log.info("User exists.")
         else:
