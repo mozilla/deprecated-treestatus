@@ -19,10 +19,10 @@ dependencies.
 
     pip install -r requirements/compiled.txt
 
-Edit who.ini to your liking. in particular, audiences should match the public
-url of the site. NB that http://127.0.0.1 is not treated the same as
-http://localhost for testing!  secret should also be changed to something
-random.
+Copy who.ini.example to who.ini and edit to your liking. In particular,
+audiences should match the public url of the site.
+NB: http://127.0.0.1 is not treated the same as http://localhost for testing!
+secret should also be changed to something random.
 
 python testapp.py for local testing
 
