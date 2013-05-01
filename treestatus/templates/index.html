@@ -1,5 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
 <head>
     <title>Tree Status</title>
     <link rel="stylesheet" type="text/css" href="/static/style.css" />
@@ -28,7 +27,7 @@ function toggle(source) {
       <h1>TreeStatus</h1>
       <div id="tableWrapper">
           {% if 'REMOTE_USER' in request.environ: -%}
-          <form method="post" action="">
+          <form method="post" action="{{request.url}}">
               <input type="hidden" name="token" value="{{token}}" />
           {% endif -%}
               <table>
@@ -67,14 +66,14 @@ function toggle(source) {
                      <li>Please indicate conditions for reopening, especially if you might disappear before reopening the tree yourself.</li>
                   </ul>
                   <label for="status">New state:
-                      <select name="status">
+                      <select name="status" id="status">
                           <option value="closed">Closed</option>
                           <option value="open">Open</option>
                           <option value="approval required">Approval Required</option>
                       </select>
                   </label>
                   <label for="reason">Reason:
-                      <input type="text" name="reason" size="30" /><br/>
+                      <input type="text" name="reason" id="reason" size="30" /><br/>
                   </label>
                   <label for="infra">Infrastructure related?
                       <input type="checkbox" name="tags" value="infra" id="infra" />
@@ -127,5 +126,6 @@ function toggle(source) {
             {% endif -%}
         </span>
     </div>
+</div>
 </body>
 </html>
