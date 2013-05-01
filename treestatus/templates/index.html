@@ -6,11 +6,12 @@
 </head>
 <body>
 {% if 'REMOTE_USER' in request.environ: -%}
-<script language="JavaScript">
+<script language="text/javascript">
 function toggle(source) {
   checkboxes = document.getElementsByName('tree');
-  for each(var checkbox in checkboxes)
-    checkbox.checked = source.checked;
+  for(var i=0; i < checkboxes.length; i++) {
+    checkboxes[i].checked = source.checked;
+  }
 }
 </script>
 {% endif -%}
