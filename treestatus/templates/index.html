@@ -5,7 +5,7 @@
 </head>
 <body>
 {% if 'REMOTE_USER' in request.environ: -%}
-<script language="text/javascript">
+<script type="text/javascript">
 function toggle(source) {
   checkboxes = document.getElementsByName('tree');
   for(var i=0; i < checkboxes.length; i++) {
