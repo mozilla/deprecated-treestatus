@@ -29,7 +29,7 @@
                       </thead>
                       <tbody>
                           <tr><td>/</td><td>GET</td><td>[optional]&nbsp;format=json</td><td>Returns a list of all trees and their statuses</td></tr>
-                          <tr><td>/</td><td>POST</td><td>status=$status<br/>reason<br/>trees=$tree<br/>[optional]&nbsp;tags=$tag</td><td>Sets the status of $trees to $status, with the specified reason. trees can be specified multiple times to set the status of multiple trees. tags can also be given multiple times.</td></tr>
+                          <tr><td>/</td><td>POST</td><td>status=$status<br/>reason<br/>trees=$tree<br/>tags=$tag</td><td>Sets the status of $trees to $status, with the specified reason. trees can be specified multiple times to set the status of multiple trees. tags can also be given multiple times.</td></tr>
                           <tr><td>/</td><td>POST</td><td>newtree=$treename</td><td>Adds a new tree called treename</td></tr>
                           <tr><td>/$treename</td><td>GET</td><td>[optional]&nbsp;format=json</td><td>Returns status of $treename</td></tr>
                           <tr><td>/$treename</td><td>POST</td><td>status=$status<br/>reason<br/>[optional]&nbsp;tags=$tag</td><td>Sets the status of $treename to status, with the specified reason and tags. tags can be given multiple times to set multiple tags.</td></tr>

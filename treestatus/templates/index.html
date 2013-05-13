@@ -6,12 +6,38 @@
 <body>
 {% if 'REMOTE_USER' in request.environ: -%}
 <script type="text/javascript">
-function toggle(source) {
-  checkboxes = document.getElementsByName('tree');
+"use strict";
+function toggleTrees(source) {
+  var checkboxes = document.getElementsByName('tree');
   for(var i=0; i < checkboxes.length; i++) {
     checkboxes[i].checked = source.checked;
   }
+  validateForm();
 }
+function hasChecked(name) {
+  var checkboxes = document.getElementsByName(name);
+  for(var i=0; i < checkboxes.length; i++) {
+    if (checkboxes[i].checked)
+      return true;
+  }
+  return false;
+}
+function validateForm() {
+  var submitButton = document.getElementById("submit");
+  if (!hasChecked("tree")) {
+    submitButton.disabled = true;
+    submitButton.value = "No trees selected!";
+    return;
+  }
+  if (!hasChecked("tags")) {
+    submitButton.disabled = true;
+    submitButton.value = "No reason tags selected!";
+    return;
+  }
+  submitButton.disabled = false;
+  submitButton.value = "Submit";
+}
+window.onload = validateForm;
 </script>
 {% endif -%}
 <div id="container">
@@ -35,7 +61,7 @@ function toggle(source) {
                       <tr>
                         {% if 'REMOTE_USER' in request.environ: -%}
                         <th class="tableCheck">
-                          <input type="checkbox" onclick="toggle(this)"  name="checkAll"/></th>
+                          <input type="checkbox" name="checkAll" onclick="toggleTrees(this)" /></th>
                         {% endif -%}
                         <th class="tableName">Name</th><th class="tableState">State</th><th class="tableReason">Reason</th>
                       </tr>
@@ -45,7 +71,7 @@ function toggle(source) {
                       <tr>
                           {% if 'REMOTE_USER' in request.environ: -%}
                           <td class="tableCheck">
-                              <input type="checkbox" name="tree" value="{{tree.tree}}" />
+                              <input type="checkbox" name="tree" value="{{tree.tree}}" onclick="validateForm()" />
                           </td>
                           {% endif -%}
                           <td class="tableName">
@@ -71,17 +97,33 @@ function toggle(source) {
                           <option value="open">Open</option>
                           <option value="approval required">Approval Required</option>
                       </select>
-                  </label>
-                  <label for="reason">Reason:
-                      <input type="text" name="reason" id="reason" size="30" /><br/>
-                  </label>
-                  <label for="infra">Infrastructure related?
-                      <input type="checkbox" name="tags" value="infra" id="infra" />
                   </label><br/>
-                  <label for="remember">Remember previous state
-                      <input type="checkbox" name="remember" value="remember" id="remember" checked="checked" />
-                  </label><br/>
-                  <span class="atRight"><input type="submit" value="Submit"/></span>
+
+                  <label for="reason">Reason:</label>
+                  <input type="text" name="reason" id="reason" size="30" /><br/><br/>
+
+                  <input type="checkbox" name="tags" value="checkin-compilation" id="checkin-compilation" onclick="validateForm()" />
+                  <label for="checkin-compilation">Check-in compilation failure</label><br/>
+
+                  <input type="checkbox" name="tags" value="checkin-test" id="checkin-test" onclick="validateForm()" />
+                  <label for="checkin-test">Check-in test failure</label><br/>
+
+                  <input type="checkbox" name="tags" value="infra" id="infra" onclick="validateForm()" />
+                  <label for="infra">Infrastructure related</label><br/>
+
+                  <input type="checkbox" name="tags" value="backlog" id="backlog" onclick="validateForm()" />
+                  <label for="backlog">Job backlog</label><br/>
+
+                  <input type="checkbox" name="tags" value="planned" id="planned" onclick="validateForm()" />
+                  <label for="planned">Planned closure</label><br/>
+
+                  <input type="checkbox" name="tags" value="other" id="other" onclick="validateForm()" />
+                  <label for="other">Other</label><br/><br/>
+
+                  <input type="checkbox" name="remember" value="remember" id="remember" checked="checked" />
+                  <label for="remember">Remember previous state</label><br/>
+
+                  <span class="atRight"><input type="submit" id="submit" value="Submit" /></span>
               </div>
           </form>
       </div>

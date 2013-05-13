@@ -60,7 +60,7 @@ class Status:
         if 'memcached.servers' in config:
             self.memcache = memcache.Client(config['memcached.servers'].split(","))
 
-    def log(self, tree, who, action, reason, tags=""):
+    def log(self, tree, who, action, reason, tags):
         l = model.DbLog()
         l.tree = tree
         l.who = who
@@ -610,7 +610,11 @@ def add_or_set_trees():
         if request.form.get('reason', None) is None:
             flask.abort(400, description="missing reason")
 
-        tags = dumps(request.form.getlist('tags'))
+        # Filter out empty-string tags
+        tags = filter(None, request.form.getlist('tags'))
+        if not tags:
+            flask.abort(400, description="missing tags")
+
         trees = request.form.getlist('tree')
         if request.form.get('remember') == 'remember':
             flush_stack = False
@@ -619,7 +623,7 @@ def add_or_set_trees():
             flush_stack = True
 
         for tree in trees:
-            status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags, flush_stack)
+            status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], dumps(tags), flush_stack)
 
     if request.form.get('newtree'):
         if request.form['newtree'] not in status.get_trees():
@@ -643,9 +647,13 @@ def update_tree(tree):
     if not 'reason' in request.form or not 'status' in request.form or not 'message' in request.form:
         flask.abort(400)
 
+    # Filter out empty-string tags
+    tags = filter(None, request.form.getlist('tags'))
+    if not tags:
+        flask.abort(400, description="missing tags")
+
     # Update tree status
-    tags = dumps(request.form.getlist('tags'))
-    status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], tags)
+    status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], dumps(tags))
 
     # Update message of the day when required
     if request.form['message'] != t['message_of_the_day']:
