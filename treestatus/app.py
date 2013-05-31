@@ -599,7 +599,7 @@ def modify_tree():
 
 
 @app.route('/', methods=['POST'])
-def add_or_set_trees():
+def update_trees():
     validate_write_request()
 
     if request.form.get('restore'):
@@ -624,11 +624,6 @@ def add_or_set_trees():
 
         for tree in trees:
             status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], dumps(tags), flush_stack)
-
-    if request.form.get('newtree'):
-        if request.form['newtree'] not in status.get_trees():
-            # We don't have this yet, so go create it!
-            status.add_tree(request.environ['REMOTE_USER'], request.form['newtree'])
 
     return flask.redirect('/?nc', 303)
 
