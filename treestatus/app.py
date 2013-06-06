@@ -24,11 +24,11 @@ log = logging.getLogger(__name__)
 
 
 class Status:
-    memcachePrefix = 'treestatus'
     defaultLogCache = 100
 
     def __init__(self):
         self.memcache = None
+        self.memcachePrefix = None
 
     ###
     # memcache helpers
@@ -57,8 +57,9 @@ class Status:
     ###
     def setup(self, config):
         # Check if we should be connecting to memcached
-        if 'memcached.servers' in config:
+        if 'memcached.servers' in config and 'memcached.prefix' in config:
             self.memcache = memcache.Client(config['memcached.servers'].split(","))
+            self.memcachePrefix = config['memcached.prefix']
 
     def log(self, tree, who, action, reason, tags):
         l = model.DbLog()
