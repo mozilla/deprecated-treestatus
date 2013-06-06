@@ -29,7 +29,8 @@ function validateForm() {
     submitButton.value = "No trees selected!";
     return;
   }
-  if (!hasChecked("tags")) {
+  var status = document.getElementById("status").value;
+  if (status == "closed" && !hasChecked("tags")) {
     submitButton.disabled = true;
     submitButton.value = "No reason tags selected!";
     return;
@@ -92,7 +93,7 @@ window.onload = validateForm;
                      <li>Please indicate conditions for reopening, especially if you might disappear before reopening the tree yourself.</li>
                   </ul>
                   <label for="status">New state:
-                      <select name="status" id="status">
+                      <select name="status" id="status" onclick="validateForm()" onkeyup="validateForm()">
                           <option value="closed">Closed</option>
                           <option value="open">Open</option>
                           <option value="approval required">Approval Required</option>

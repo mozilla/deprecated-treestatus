@@ -613,7 +613,7 @@ def update_trees():
 
         # Filter out empty-string tags
         tags = filter(None, request.form.getlist('tags'))
-        if not tags:
+        if request.form['status'] == 'closed' and not tags:
             flask.abort(400, description="missing tags")
 
         trees = request.form.getlist('tree')
@@ -645,7 +645,7 @@ def update_tree(tree):
 
     # Filter out empty-string tags
     tags = filter(None, request.form.getlist('tags'))
-    if not tags:
+    if request.form['status'] == 'closed' and not tags:
         flask.abort(400, description="missing tags")
 
     # Update tree status

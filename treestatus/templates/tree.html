@@ -18,7 +18,8 @@ function hasChecked(name) {
 }
 function validateForm() {
   var submitButton = document.getElementById("submit");
-  if (!hasChecked("tags")) {
+  var status = document.getElementById("status").value;
+  if (status == "closed" && !hasChecked("tags")) {
     submitButton.disabled = true;
     submitButton.value = "No reason tags selected!";
     return;
@@ -54,7 +55,7 @@ window.onload = validateForm;
                     <input type="hidden" name="token" value="{{token}}" />
 
                     <label for="status">New state:
-                        <select name="status">
+                        <select name="status" id="status" onclick="validateForm()" onkeyup="validateForm()">
                             <option value="closed">Closed</option>
                             <option value="open">Open</option>
                             <option value="approval required">Approval Required</option>
