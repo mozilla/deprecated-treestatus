@@ -61,7 +61,7 @@ class Status:
             self.memcache = memcache.Client(config['memcached.servers'].split(","))
             self.memcachePrefix = config['memcached.prefix']
 
-    def log(self, tree, who, action, reason, tags):
+    def log(self, tree, who, action, reason="", tags=""):
         l = model.DbLog()
         l.tree = tree
         l.who = who
