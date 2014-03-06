@@ -40,7 +40,7 @@ window.onload = validateForm;
                 <a class="loginout" href="/login">Login</a>
                 {% endif -%}
             </span>
-            <h1>TreeStatus</h1>
+            <h1><a href="/">TreeStatus</a></h1>
             <h2>{{tree.tree}} is <span class="{{tree.status.lower().replace(" ", "_")}}">{{tree.status.upper()}}</span></h2><br/>
             {% if tree.reason: -%}
             <h2>Reason: {{tree.reason}}</h2>
