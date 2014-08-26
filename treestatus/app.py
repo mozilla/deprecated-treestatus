@@ -1,4 +1,5 @@
 import os
+import re
 import site
 import time
 from datetime import datetime
@@ -17,7 +18,7 @@ import sqlalchemy as sa
 import treestatus.model as model
 
 import flask
-from flask import Flask, request, make_response, render_template, jsonify
+from flask import Flask, request, make_response, render_template, jsonify, Markup
 
 import logging
 log = logging.getLogger(__name__)
@@ -277,6 +278,17 @@ class Status:
 status = Status()
 
 app = Flask(__name__)
+
+
+@app.template_filter('linkbugs')
+def linkbugs(s):
+    regex = re.compile(r'\b(?P<bug_number>bug\s+(?P<number>[0-9]+))\b', re.IGNORECASE)
+    r = regex.search(s)
+    if r:
+        return Markup(re.sub(regex,
+                              '<a href="https://bugzilla.mozilla.org/show_bug.cgi?id={}">{}</a>'.format(r.groups(0)[1], r.groups(0)[0]),
+                              s))
+    return s
 
 
 @app.template_filter('urlencode')
