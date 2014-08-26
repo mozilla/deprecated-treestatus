@@ -79,7 +79,7 @@ window.onload = validateForm;
                               <a href="/{{tree.tree|urlencode|urlencode}}">{{tree.tree}}</a>
                           </td>
                           <td class="tableState {{tree.status.lower().replace(" ", "_")}}">{{tree.status.upper()}}</td>
-                          <td class="tableReason">{{tree.reason or ""}}</td>
+                          <td class="tableReason">{{ tree.reason|linkbugs|safe or "" }}</a></td>
                       </tr>
                       {% endfor -%}
                   </tbody>

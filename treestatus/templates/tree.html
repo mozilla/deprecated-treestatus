@@ -43,10 +43,10 @@ window.onload = validateForm;
             <h1><a href="/">TreeStatus</a></h1>
             <h2>{{tree.tree}} is <span class="{{tree.status.lower().replace(" ", "_")}}">{{tree.status.upper()}}</span></h2><br/>
             {% if tree.reason: -%}
-            <h2>Reason: {{tree.reason}}</h2>
+            <h2>Reason: {{tree.reason|linkbugs|safe}}</h2>
             {% endif -%}
             {% if tree.message_of_the_day -%}
-            <h3>{{tree.message_of_the_day}}</h3>
+            <h3>{{tree.message_of_the_day|linkbugs|safe}}</h3>
             {% endif -%}
             {% if 'REMOTE_USER' in request.environ: -%}
             <div id="modify">
