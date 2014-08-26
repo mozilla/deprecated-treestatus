@@ -1,4 +1,5 @@
 import os
+import re
 import site
 import time
 from datetime import datetime
@@ -277,6 +278,17 @@ class Status:
 status = Status()
 
 app = Flask(__name__)
+
+
+@app.template_filter('linkbugs')
+def linkbugs(s):
+    regex = re.compile(r'\b(?P<bug_number>bug\s+(?P<number>[0-9]+))\b', re.IGNORECASE)
+    r = regex.search(s)
+    if r:
+        return re.sub(regex,
+                      '<a href="https://bugzilla.mozilla.org/show_bug.cgi?id={}">{}</a>'.format(r.groups(0)[1], r.groups(0)[0]),
+                      s)
+    return s
 
 
 @app.template_filter('urlencode')
