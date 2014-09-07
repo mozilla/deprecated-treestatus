@@ -1,5 +1,5 @@
-from sqlalchemy import MetaData, Table, Column, String, Integer, DateTime, Boolean, ForeignKey
-#from migrate import *
+from sqlalchemy import (MetaData, Table, Column, String, Integer, DateTime,
+                        Boolean, ForeignKey)
 
 meta = MetaData()
 

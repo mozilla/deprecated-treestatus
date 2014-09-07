@@ -18,7 +18,8 @@ import sqlalchemy as sa
 import treestatus.model as model
 
 import flask
-from flask import Flask, request, make_response, render_template, jsonify, Markup
+from flask import (Flask, request, make_response, render_template, jsonify,
+                   Markup)
 
 import logging
 log = logging.getLogger(__name__)
@@ -59,7 +60,8 @@ class Status:
     def setup(self, config):
         # Check if we should be connecting to memcached
         if 'memcached.servers' in config and 'memcached.prefix' in config:
-            self.memcache = memcache.Client(config['memcached.servers'].split(","))
+            self.memcache = memcache.Client(config['memcached.servers']
+                                            .split(","))
             self.memcachePrefix = config['memcached.prefix']
 
     def log(self, tree, who, action, reason="", tags=""):
@@ -184,7 +186,8 @@ class Status:
         db_tree.status = status
         db_tree.reason = reason.strip()
         if flush_stack:
-            for s in session.query(model.DbStatusStackTree).filter_by(tree=tree):
+            for s in session.query(model.DbStatusStackTree) \
+                            .filter_by(tree=tree):
                 stack = s.stack
                 stack.trees.remove(s)
                 if not stack.trees:
@@ -210,7 +213,8 @@ class Status:
                 continue
             # Restore its state
             last_state = loads(tree.last_state)
-            self.set_status(who, tree.tree, last_state['status'], last_state['reason'], '', flush_stack=False)
+            self.set_status(who, tree.tree, last_state['status'],
+                            last_state['reason'], '', flush_stack=False)
 
         # Delete everything
         for tree in stack.trees:
@@ -234,14 +238,16 @@ class Status:
             s = model.DbStatusStackTree()
             s.stack = stack
             s.tree = tree
-            s.last_state = dumps(session.query(model.DbTree).get(tree).to_dict())
+            s.last_state = dumps(session.query(model.DbTree)
+                                 .get(tree).to_dict())
             session.add(s)
 
         session.commit()
 
     def get_remembered_states(self):
         session = request.session
-        stacks = session.query(model.DbStatusStack).order_by(model.DbStatusStack.when.desc())
+        stacks = session.query(model.DbStatusStack) \
+                        .order_by(model.DbStatusStack.when.desc())
         return list(stacks)
 
     def add_tree(self, who, tree):
@@ -282,13 +288,16 @@ app = Flask(__name__)
 
 @app.template_filter('linkbugs')
 def linkbugs(s):
-    bug_url_anchor = '<a href="https://bugzilla.mozilla.org/show_bug.cgi?id={}">{}</a>'
-    bug_re = re.compile(r'\b(?P<bug_text>bug\s+(?P<bug_id>[0-9]+))\b', re.IGNORECASE)
+    bug_url_anchor = '<a href="https://bugzilla.mozilla.org/show_bug.cgi \
+                     ?id={}">{}</a>'
+    bug_re = re.compile(r'\b(?P<bug_text>bug\s+(?P<bug_id>[0-9]+))\b',
+                        re.IGNORECASE)
     m = bug_re.search(s)
     if m:
         return Markup(re.sub(bug_re,
-                              bug_url_anchor.format(m.group('bug_id'), m.group('bug_text')),
-                              s))
+                             bug_url_anchor.format(m.group('bug_id'),
+                                                   m.group('bug_text')),
+                             s))
     return s
 
 
@@ -363,7 +372,9 @@ def index():
     else:
         user = None
 
-    resp = make_response(render_template('index.html', trees=trees, token=get_token(), stacks=stacks, user=user))
+    resp = make_response(render_template('index.html', trees=trees,
+                                         token=get_token(), stacks=stacks,
+                                         user=user))
     resp.headers['Cache-Control'] = 'max-age=30'
     resp.headers['Vary'] = 'Cookie'
     if '?nc' in request.url:
@@ -431,7 +442,8 @@ def get_tree(tree):
     if is_json():
         return wrap_json_headers(t)
 
-    resp = make_response(render_template('tree.html', tree=t, logs=status.get_logs(tree),
+    resp = make_response(render_template('tree.html', tree=t,
+                         logs=status.get_logs(tree),
                          loads=loads, token=get_token()))
     resp.headers['Cache-Control'] = 'max-age=30'
     resp.headers['Vary'] = 'Cookie'
@@ -472,7 +484,9 @@ def show_users():
         flask.abort(403)
 
     users = request.session.query(model.DbUser)
-    resp = make_response(render_template('users.html', user=u, users=users, token=get_token()))
+    resp = make_response(render_template('users.html', user=u,
+                                         users=users,
+                                         token=get_token()))
     resp.headers['Cache-Control'] = 'max-age=30'
     resp.headers['Vary'] = 'Cookie'
     if '?nc' in request.url:
@@ -511,16 +525,16 @@ def modify_users():
         u.name = request.form.get('newuser')
         u.is_admin = False
         u.is_sheriff = False
-        userFound = model.DbUser.get(u.name) 
+        userFound = model.DbUser.get(u.name)
         if userFound:
-           log.info("User exists.")
+            log.info("User exists.")
         else:
-           log.info("%s is creating user %s", admin.name, u.name)
-           session.add(u)
+            log.info("%s is creating user %s", admin.name, u.name)
+            session.add(u)
 
     # Remove admin privs
     for uid in request.form.getlist('was_admin'):
-        if not uid in request.form.getlist('admin'):
+        if uid not in request.form.getlist('admin'):
             u = session.query(model.DbUser).filter_by(id=uid).one()
             if not u:
                 continue
@@ -537,7 +551,7 @@ def modify_users():
 
     # Remove sheriff privs
     for uid in request.form.getlist('was_sheriff'):
-        if not uid in request.form.getlist('sheriff'):
+        if uid not in request.form.getlist('sheriff'):
             u = session.query(model.DbUser).filter_by(id=uid).one()
             if not u:
                 continue
@@ -569,7 +583,9 @@ def show_trees():
         flask.abort(403)
 
     treesList = request.session.query(model.DbTree)
-    resp = make_response(render_template('mtree.html', user=u, trees=treesList, token=get_token()))
+    resp = make_response(render_template('mtree.html', user=u,
+                                         trees=treesList,
+                                         token=get_token()))
     resp.headers['Cache-Control'] = 'max-age=30'
     resp.headers['Vary'] = 'Cookie'
     if '?nc' in request.url:
@@ -607,7 +623,8 @@ def modify_tree():
     if request.form.get('newtree'):
         if request.form['newtree'] not in status.get_trees():
             # We don't have this yet, so go create it!
-            status.add_tree(request.environ['REMOTE_USER'], request.form['newtree'])
+            status.add_tree(request.environ['REMOTE_USER'],
+                            request.form['newtree'])
 
     return flask.redirect('/mtree?nc', 303)
 
@@ -618,7 +635,8 @@ def update_trees():
 
     if request.form.get('restore'):
         # Restore stacked status
-        status.restore_status(request.environ['REMOTE_USER'], request.form['restore'])
+        status.restore_status(request.environ['REMOTE_USER'],
+                              request.form['restore'])
 
     if request.form.get('status'):
         if request.form.get('reason', None) is None:
@@ -632,12 +650,16 @@ def update_trees():
         trees = request.form.getlist('tree')
         if request.form.get('remember') == 'remember':
             flush_stack = False
-            status.remember_state(request.environ['REMOTE_USER'], trees, request.form['status'], request.form['reason'])
+            status.remember_state(request.environ['REMOTE_USER'], trees,
+                                  request.form['status'],
+                                  request.form['reason'])
         else:
             flush_stack = True
 
         for tree in trees:
-            status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], dumps(tags), flush_stack)
+            status.set_status(request.environ['REMOTE_USER'], tree,
+                              request.form['status'], request.form['reason'],
+                              dumps(tags), flush_stack)
 
     return flask.redirect('/?nc', 303)
 
@@ -653,7 +675,8 @@ def update_tree(tree):
     if '_method' in request.form and request.form['_method'] == 'DELETE':
         return delete_tree(tree)
 
-    if not 'reason' in request.form or not 'status' in request.form or not 'message' in request.form:
+    if ('reason' not in request.form or 'status' not in request.form or
+       'message' not in request.form):
         flask.abort(400)
 
     # Filter out empty-string tags
@@ -662,11 +685,14 @@ def update_tree(tree):
         flask.abort(400, description="missing tags")
 
     # Update tree status
-    status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], dumps(tags))
+    status.set_status(request.environ['REMOTE_USER'], tree,
+                      request.form['status'], request.form['reason'],
+                      dumps(tags))
 
     # Update message of the day when required
     if request.form['message'] != t['message_of_the_day']:
-        status.set_motd(request.environ['REMOTE_USER'], tree, request.form['message'])
+        status.set_motd(request.environ['REMOTE_USER'], tree,
+                        request.form['message'])
 
     return flask.redirect("/%s?nc" % tree, 303)
 
@@ -682,10 +708,11 @@ def delete_tree(tree):
     # pretend this is a POST request; request.args doesn't read POST
     # parameters for DELETE calls
     request.environ['REQUEST_METHOD'] = 'POST'
-    if not 'reason' in request.form:
+    if 'reason' not in request.form:
         log.info("bad request; missing reason")
         flask.abort(400)
-    status.del_tree(request.environ['REMOTE_USER'], tree, request.form['reason'])
+    status.del_tree(request.environ['REMOTE_USER'], tree,
+                    request.form['reason'])
     return flask.redirect("/" + tree, 303)
 
 
@@ -718,6 +745,8 @@ def wsgiapp(config, **kwargs):
     status.setup(config)
     app.debug = config.get('debug')
     configfile = my_dir + "/who.ini"
-    app.wsgi_app = make_middleware_with_config(app.wsgi_app, config, config.get('who_config', configfile))
+    app.wsgi_app = make_middleware_with_config(app.wsgi_app, config,
+                                               config.get('who_config',
+                                                          configfile))
     logging.basicConfig(level=logging.DEBUG)
     return app
