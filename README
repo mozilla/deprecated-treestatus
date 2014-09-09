@@ -34,3 +34,5 @@ database created called treestatus.db. You would then use the sqlite3 command
 to add an account for yourself:
 
     sqlite3 treestatus.db "insert into users (name, is_admin, is_sheriff) values ('me@example.com', 1, 1)"
+
+Before submitting pull requests, it is recommended to run [flake8](https://flake8.readthedocs.org/en/2.2.3/) against any `.py` files that are modified, to make sure there are no errors/warnings.
