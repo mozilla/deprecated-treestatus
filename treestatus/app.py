@@ -66,7 +66,7 @@ class Status:
         l.tree = tree
         l.who = who
         l.action = action
-        l.when = datetime.now()
+        l.when = datetime.utcnow()
         l.reason = reason
         l.tags = tags
         request.session.add(l)
@@ -223,7 +223,7 @@ class Status:
         stack = model.DbStatusStack()
         stack.who = who
         stack.reason = reason
-        stack.when = datetime.now()
+        stack.when = datetime.utcnow()
         stack.status = status
         session = request.session
         session.add(stack)
@@ -498,12 +498,12 @@ def modify_users():
         u.name = request.form.get('newuser')
         u.is_admin = False
         u.is_sheriff = False
-        userFound = model.DbUser.get(u.name) 
+        userFound = model.DbUser.get(u.name)
         if userFound:
-           log.info("User exists.")
+            log.info("User exists.")
         else:
-           log.info("%s is creating user %s", admin.name, u.name)
-           session.add(u)
+            log.info("%s is creating user %s", admin.name, u.name)
+            session.add(u)
 
     # Remove admin privs
     for uid in request.form.getlist('was_admin'):
