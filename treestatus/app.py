@@ -209,7 +209,8 @@ class Status:
                 continue
             # Restore its state
             last_state = loads(tree.last_state)
-            self.set_status(who, tree.tree, last_state['status'], last_state['reason'], '', flush_stack=False)
+            self.set_status(who, tree.tree, last_state['status'], last_state['reason'],
+                            '', flush_stack=False)
 
         # Delete everything
         for tree in stack.trees:
@@ -350,7 +351,8 @@ def index():
     else:
         user = None
 
-    resp = make_response(render_template('index.html', trees=trees, token=get_token(), stacks=stacks, user=user))
+    resp = make_response(render_template('index.html', trees=trees, token=get_token(),
+                                         stacks=stacks, user=user))
     resp.headers['Cache-Control'] = 'max-age=30'
     resp.headers['Vary'] = 'Cookie'
     if '?nc' in request.url:
@@ -507,7 +509,7 @@ def modify_users():
 
     # Remove admin privs
     for uid in request.form.getlist('was_admin'):
-        if not uid in request.form.getlist('admin'):
+        if uid not in request.form.getlist('admin'):
             u = session.query(model.DbUser).filter_by(id=uid).one()
             if not u:
                 continue
@@ -524,7 +526,7 @@ def modify_users():
 
     # Remove sheriff privs
     for uid in request.form.getlist('was_sheriff'):
-        if not uid in request.form.getlist('sheriff'):
+        if uid not in request.form.getlist('sheriff'):
             u = session.query(model.DbUser).filter_by(id=uid).one()
             if not u:
                 continue
@@ -556,7 +558,8 @@ def show_trees():
         flask.abort(403)
 
     treesList = request.session.query(model.DbTree)
-    resp = make_response(render_template('mtree.html', user=u, trees=treesList, token=get_token()))
+    resp = make_response(render_template('mtree.html', user=u,
+                                         trees=treesList, token=get_token()))
     resp.headers['Cache-Control'] = 'max-age=30'
     resp.headers['Vary'] = 'Cookie'
     if '?nc' in request.url:
@@ -619,12 +622,14 @@ def update_trees():
         trees = request.form.getlist('tree')
         if request.form.get('remember') == 'remember':
             flush_stack = False
-            status.remember_state(request.environ['REMOTE_USER'], trees, request.form['status'], request.form['reason'])
+            status.remember_state(request.environ['REMOTE_USER'], trees,
+                                  request.form['status'], request.form['reason'])
         else:
             flush_stack = True
 
         for tree in trees:
-            status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], dumps(tags), flush_stack)
+            status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'],
+                              request.form['reason'], dumps(tags), flush_stack)
 
     return flask.redirect('/?nc', 303)
 
@@ -640,7 +645,8 @@ def update_tree(tree):
     if '_method' in request.form and request.form['_method'] == 'DELETE':
         return delete_tree(tree)
 
-    if not 'reason' in request.form or not 'status' in request.form or not 'message' in request.form:
+    if ('reason' not in request.form or 'status' not in request.form or
+            'message' not in request.form):
         flask.abort(400)
 
     # Filter out empty-string tags
@@ -649,7 +655,8 @@ def update_tree(tree):
         flask.abort(400, description="missing tags")
 
     # Update tree status
-    status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'], request.form['reason'], dumps(tags))
+    status.set_status(request.environ['REMOTE_USER'], tree, request.form['status'],
+                      request.form['reason'], dumps(tags))
 
     # Update message of the day when required
     if request.form['message'] != t['message_of_the_day']:
@@ -669,7 +676,7 @@ def delete_tree(tree):
     # pretend this is a POST request; request.args doesn't read POST
     # parameters for DELETE calls
     request.environ['REQUEST_METHOD'] = 'POST'
-    if not 'reason' in request.form:
+    if 'reason' not in request.form:
         log.info("bad request; missing reason")
         flask.abort(400)
     status.del_tree(request.environ['REMOTE_USER'], tree, request.form['reason'])
@@ -705,6 +712,7 @@ def wsgiapp(config, **kwargs):
     status.setup(config)
     app.debug = config.get('debug')
     configfile = my_dir + "/who.ini"
-    app.wsgi_app = make_middleware_with_config(app.wsgi_app, config, config.get('who_config', configfile))
+    app.wsgi_app = make_middleware_with_config(app.wsgi_app, config,
+                                               config.get('who_config', configfile))
     logging.basicConfig(level=logging.DEBUG)
     return app

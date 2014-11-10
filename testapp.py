@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import os
-import treestatus.app, treestatus.model as model
+import treestatus.app
+import treestatus.model as model
+
 
 def main():
     app = treestatus.app.wsgiapp({

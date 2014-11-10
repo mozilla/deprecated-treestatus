@@ -16,6 +16,7 @@ DbBase = declarative_base()
 
 Session = None
 
+
 def setup(config):
     engine = sa.engine_from_config(config, pool_recycle=60)
     # Make sure we're up-to-date
@@ -41,6 +42,7 @@ def setup(config):
     global Session
     Session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 
+
 class DbTree(DbBase):
     __tablename__ = 'trees'
     tree = Column(String(32), primary_key=True)
@@ -50,11 +52,12 @@ class DbTree(DbBase):
 
     def to_dict(self):
         return dict(
-                tree=self.tree,
-                status=self.status,
-                reason=self.reason,
-                message_of_the_day=self.message_of_the_day,
-                )
+            tree=self.tree,
+            status=self.status,
+            reason=self.reason,
+            message_of_the_day=self.message_of_the_day,
+            )
+
 
 class DbLog(DbBase):
     __tablename__ = 'log'
@@ -68,13 +71,14 @@ class DbLog(DbBase):
 
     def to_dict(self):
         return dict(
-                tree=self.tree,
-                when=self.when.strftime("%Y-%m-%dT%H:%M:%S%Z"),
-                who=self.who,
-                action=self.action,
-                reason=self.reason,
-                tags=self.tags,
-                )
+            tree=self.tree,
+            when=self.when.strftime("%Y-%m-%dT%H:%M:%S%Z"),
+            who=self.who,
+            action=self.action,
+            reason=self.reason,
+            tags=self.tags,
+            )
+
 
 class DbToken(DbBase):
     __tablename__ = 'tokens'
@@ -92,6 +96,7 @@ class DbToken(DbBase):
         result = q.execute().fetchone()
         return result
 
+
 class DbStatusStack(DbBase):
     __tablename__ = 'status_stacks'
     id = Column(Integer, primary_key=True)
@@ -99,6 +104,7 @@ class DbStatusStack(DbBase):
     reason = Column(String(256), nullable=False)
     when = Column(DateTime, nullable=False, index=True)
     status = Column(String(64), nullable=False)
+
 
 class DbStatusStackTree(DbBase):
     __tablename__ = 'status_stack_trees'
@@ -108,6 +114,7 @@ class DbStatusStackTree(DbBase):
     last_state = Column(String(1024), nullable=False)
 
     stack = relation(DbStatusStack, backref='trees')
+
 
 class DbUser(DbBase):
     __tablename__ = "users"
