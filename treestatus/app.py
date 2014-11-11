@@ -22,6 +22,7 @@ from flask import Flask, request, make_response, render_template, jsonify
 import logging
 log = logging.getLogger(__name__)
 
+from bleach import linkify
 
 class Status:
     defaultLogCache = 100
@@ -283,6 +284,10 @@ app = Flask(__name__)
 @app.template_filter('urlencode')
 def urlencode(s):
     return urllib.quote(s, '')
+
+@app.template_filter('sanitize')
+def sanitize_html(text):
+    return flask.Markup(linkify(text))
 
 
 def urldecode(s):

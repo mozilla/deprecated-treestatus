@@ -3,6 +3,23 @@
 <head>
     <title>{{tree.tree}} - {{tree.status}}</title>
     <link rel="stylesheet" type="text/css" href="/static/style.css" />
+    <script type="application/javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        function restoreState(event) {
+            var row = event.target.parentElement.parentElement;
+            var state = row.querySelector(".tableState").textContent.trim();
+            var reason = row.querySelector(".tableReason").innerHTML.trim();
+            var infra = /\binfra\b/.test(row.querySelector(".tableTags").textContent);
+            document.querySelector("[name=status]").value = state;
+            document.querySelector("[name=reason]").value = reason;
+            document.getElementById("infra").checked = infra;
+        }
+        var restoreButtons = document.querySelectorAll(".restore");
+        for (var i = 0; i < restoreButtons.length; ++i) {
+            restoreButtons[i].addEventListener("click", restoreState);
+        }
+    });
+    </script>
 </head>
 <body>
 {% if 'REMOTE_USER' in request.environ: -%}
@@ -31,11 +48,11 @@ window.onload = validateForm;
 </script>
 {% endif -%}
     <div id="container">
-        <div id = "main"> 
+        <div id = "main">
             <span class="atRight">
                 {% if 'REMOTE_USER' in request.environ: -%}
                 {{request.environ['REMOTE_USER']}}
-                <a class="loginout" href="/logout">Logout</a> 
+                <a class="loginout" href="/logout">Logout</a>
                 {% else: -%}
                 <a class="loginout" href="/login">Login</a>
                 {% endif -%}
@@ -43,7 +60,7 @@ window.onload = validateForm;
             <h1><a href="/">TreeStatus</a></h1>
             <h2>{{tree.tree}} is <span class="{{tree.status.lower().replace(" ", "_")}}">{{tree.status.upper()}}</span></h2><br/>
             {% if tree.reason: -%}
-            <h2>Reason: {{tree.reason}}</h2>
+            <h2>Reason: {{tree.reason|sanitize}}</h2>
             {% endif -%}
             {% if tree.message_of_the_day -%}
             <h3>{{tree.message_of_the_day}}</h3>
@@ -103,6 +120,7 @@ window.onload = validateForm;
                           <th class="tableState">Action</th>
                           <th class="tableReason">Reason</th>
                           <th class="tableTags">Tags</th>
+                          <th class="tableRestore">Restore</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -122,10 +140,13 @@ window.onload = validateForm;
                                 {{log.action}}
                             </td>
                             <td class="tableReason">
-                                {{log.reason}}
+                                {{log.reason|sanitize}}
                             </td>
                             <td class="tableTags">
                                 {{", ".join(log.tags)}}
+                            </td>
+                            <td class="tableRestore">
+                                <button class="restore">Restore</button>
                             </td>
                         </tr>
                         {% endfor -%}
