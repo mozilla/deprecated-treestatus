@@ -204,6 +204,14 @@ td.tableSheriff, td.tableAdmin {
     border: 1px grey dashed;
 }
 
+#error {
+    margin-left: 260px;
+    margin-right: auto;
+    min-width: 720px;
+    padding: 10px;
+    color:red;
+}
+
 h2#previous {
     text-align: center;
 }
