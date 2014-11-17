@@ -49,6 +49,9 @@
                          </label>
                         <span class="atRight"><input type="submit" value="Add" /></span>
                     </div>
+                {% if error %}
+                    <div id="error">{{ error.error_text }}</div>
+                {% endif %}
                 </form>
             </div>
         </div>

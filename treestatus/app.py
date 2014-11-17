@@ -573,7 +573,15 @@ def show_trees():
         flask.abort(403)
 
     treesList = request.session.query(model.DbTree)
-    resp = make_response(render_template('mtree.html', user=u,
+
+    if 'error' in request.args:
+        if 'dup' in request.args['error']:
+            error = {'error_text': 'Tree with that name already exists'}
+        resp = make_response(render_template('mtree.html', user=u,
+                                             trees=treesList, token=get_token(),
+                                             error=error))
+    else:
+        resp = make_response(render_template('mtree.html', user=u,
                                          trees=treesList, token=get_token()))
     resp.headers['Cache-Control'] = 'max-age=30'
     resp.headers['Vary'] = 'Cookie'
@@ -610,10 +618,13 @@ def modify_tree():
 
     # Add tree
     if request.form.get('newtree'):
-        if request.form['newtree'] not in status.get_trees():
+        trees = [t.strip().lower() for t in status.get_trees()]
+        if request.form['newtree'].strip().lower() not in trees:
             # We don't have this yet, so go create it!
             status.add_tree(request.environ['REMOTE_USER'], request.form['newtree'])
-
+        else:
+            log.info("Attempted to create a duplicate tree %s", request.form['newtree'])
+            return flask.redirect(flask.url_for('show_trees', error='dup'))
     return flask.redirect('/mtree?nc', 303)
 
 
