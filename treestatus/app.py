@@ -22,6 +22,7 @@ from flask import Flask, request, make_response, render_template, jsonify, Marku
 
 import logging
 log = logging.getLogger(__name__)
+TREE_SUMMARY_LOG_LIMIT = 5
 
 
 class Status:
@@ -435,8 +436,9 @@ def get_tree(tree):
     if is_json():
         return wrap_json_headers(t)
 
-    resp = make_response(render_template('tree.html', tree=t, logs=status.get_logs(tree),
-                         loads=loads, token=get_token()))
+    resp = make_response(render_template('tree.html', tree=t,
+                                         logs=status.get_logs(tree, limit=TREE_SUMMARY_LOG_LIMIT),
+                                         loads=loads, token=get_token()))
     resp.headers['Cache-Control'] = 'max-age=30'
     resp.headers['Vary'] = 'Cookie'
     if '?nc' in request.url:
@@ -450,16 +452,16 @@ def get_logs(tree):
     if not t:
         flask.abort(404)
 
-    if request.args.get('all') == '1':
+    if is_json() and request.args.get('all') == '1':
         logs = status.get_logs(tree, limit=None)
-    else:
+        resp = wrap_json_headers(dict(logs=logs))
+    elif is_json():
         logs = status.get_logs(tree)
-
-    if is_json():
         resp = wrap_json_headers(dict(logs=logs))
     else:
-        resp = make_response(dumps(logs, indent=2))
-        resp.headers['Content-Type'] = 'text/plain'
+        logs = status.get_logs(tree, limit=None)
+        resp = make_response(render_template('treelogs.html', tree=t, logs=logs,
+                             loads=loads, token=get_token()))
     resp.headers['Cache-Control'] = 'max-age=30'
     return resp
 
