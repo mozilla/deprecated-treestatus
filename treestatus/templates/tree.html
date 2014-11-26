@@ -94,7 +94,7 @@ window.onload = validateForm;
             </div>
             {% endif -%}
             <div id="tableWrapper">
-                <h2 id="previous">Summary</h2>
+                <h2 id="previous">Recent Changes</h2>
                 <table class="history">
                     <thead>
                         <tr>
@@ -131,6 +131,9 @@ window.onload = validateForm;
                         {% endfor -%}
                     </tbody>
                 </table>
+                <div style="margin-left:auto; margin-right:auto; width:200px">
+                    <a href="/{{tree.tree}}/logs">View all logs...</a>
+                </div>
             </div>
         </div>
         <div id="footer">
