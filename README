@@ -34,3 +34,8 @@ database created called treestatus.db. You would then use the sqlite3 command
 to add an account for yourself:
 
     sqlite3 treestatus.db "insert into users (name, is_admin, is_sheriff) values ('me@example.com', 1, 1)"
+
+You will need to add at least one tree to the trees database to actually use treestatus:
+
+    sqlite3 treestatus.db "insert into trees (tree, status, reason, message_of_the_day) values ('mozilla-central', 'open', '', '')"
+
