@@ -157,7 +157,9 @@ window.onload = validateForm;
                 <table class="history">
                     <thead>
                         <tr>
+                        {% if 'REMOTE_USER' in request.environ: -%}
                           <th class="tableRevert"></th>
+                        {% endif -%}
                           <th class="tableWho">User</th>
                           <th class="tableWhen">Time</th>
                           <th class="tableState">Action</th>
@@ -168,11 +170,13 @@ window.onload = validateForm;
                     <tbody>
                         {% for log in logs: -%}
                         <tr>
+                        {% if 'REMOTE_USER' in request.environ: -%}
                             <td class="tableRevert">
                             {% if log.action != 'motd' -%}
                                 <input type="button" value="Revert to here" onclick="revertHere(this)"/>
                             {% endif -%}
                             </td>
+                        {% endif -%}
                             <td class="tableWho">
                             {% if 'REMOTE_USER' in request.environ: -%}
                                 {{log.who}}
