@@ -8,6 +8,56 @@
 {% if 'REMOTE_USER' in request.environ: -%}
 <script type="text/javascript">
 "use strict";
+
+/*
+ *  Pre-sets the New Status form to a prior state's contents
+ */
+function revertHere(obj) {
+  // Scrape the information from the line where "revert" was clicked
+  var selectedCells = obj.parentNode.parentNode.getElementsByTagName("td");
+  var state = {};
+
+  for(var i = 0; i < selectedCells.length; i++) {
+    switch(selectedCells[i].className) {
+      case "tableWho":
+        state.user = selectedCells[i].textContent.trim();
+      break;
+      case "tableWhen":
+        state.time = selectedCells[i].textContent.trim();
+      break;
+      case "tableState":
+        switch(selectedCells[i].textContent.trim()) {
+          case "closed":
+            state.status = 0;
+          break;
+          case "open":
+            state.status = 1;
+          break;
+          case "approval required":
+            state.status = 2;
+          break;
+        }
+      break;
+      case "tableReason":
+        state.reason = selectedCells[i].textContent.trim();
+      break;
+      case "tableTags":
+        state.tags = selectedCells[i].textContent.trim().split(", ");
+      break;
+    }
+  }
+
+  resetForm();
+
+  // Set the form elements to the desired state 
+  document.getElementById("status").selectedIndex = state.status;
+  document.getElementById("reason").value = state.reason;
+  for(var i = 0; i < state.tags.length; i++) {
+      document.getElementById(state.tags[i]).checked = true;
+  }
+
+  validateForm();
+}
 function hasChecked(name) {
   var checkboxes = document.getElementsByName(name);
   for(var i=0; i < checkboxes.length; i++) {
@@ -15,6 +65,14 @@ function hasChecked(name) {
       return true;
   }
   return false;
+}
+function resetForm() {
+  var inputs = document.getElementsByTagName("input");
+  for(var i = 0; i < inputs.length; i++) {
+    if(inputs[i].type == "checkbox" && inputs[i].id != "remember") {
+      inputs[i].checked = false;
+    }
+  }
 }
 function validateForm() {
   var submitButton = document.getElementById("submit");
@@ -99,6 +157,7 @@ window.onload = validateForm;
                 <table class="history">
                     <thead>
                         <tr>
+                          <th class="tableRevert"></th>
                           <th class="tableWho">User</th>
                           <th class="tableWhen">Time</th>
                           <th class="tableState">Action</th>
@@ -109,6 +168,11 @@ window.onload = validateForm;
                     <tbody>
                         {% for log in logs: -%}
                         <tr>
+                            <td class="tableRevert">
+                            {% if log.action != 'motd' -%}
+                                <input type="button" value="Revert to here" onclick="revertHere(this)"/>
+                            {% endif -%}
+                            </td>
                             <td class="tableWho">
                             {% if 'REMOTE_USER' in request.environ: -%}
                                 {{log.who}}
