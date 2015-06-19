@@ -167,7 +167,10 @@ class Status:
         treenames = []
         for t in request.session.query(model.DbTree):
             trees[t.tree] = t.to_dict()
-            trees[t.tree]['tags'] = loads(trees[t.tree]['tags'])
+            try:
+                trees[t.tree]['tags'] = loads(trees[t.tree]['tags'])
+            except:
+                trees[t.tree]['tags'] = ""
             treenames.append(t.tree)
             if self.memcache:
                 self._mcPut('tree:%s' % t.tree, trees[t.tree], expires=60)

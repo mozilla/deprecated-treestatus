@@ -16,7 +16,6 @@ DbBase = declarative_base()
 
 Session = None
 
-
 def setup(config):
     engine = sa.engine_from_config(config, pool_recycle=60)
     # Make sure we're up-to-date
@@ -28,7 +27,9 @@ def setup(config):
         # Put it under version control
         # If we have a 'trees' table, it's version 1, otherwise we're version 0
         insp = Inspector.from_engine(engine)
-        if "trees" in insp.get_table_names():
+        if "trees" in insp.get_table_names() and "tags" in insp.get_columns("trees"):
+            version = 2
+        elif "trees" in insp.get_table_names():
             version = 1
         else:
             version = 0
