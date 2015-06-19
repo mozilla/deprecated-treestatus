@@ -16,7 +16,6 @@ DbBase = declarative_base()
 
 Session = None
 
-
 def setup(config):
     engine = sa.engine_from_config(config, pool_recycle=60)
     # Make sure we're up-to-date
@@ -28,7 +27,9 @@ def setup(config):
         # Put it under version control
         # If we have a 'trees' table, it's version 1, otherwise we're version 0
         insp = Inspector.from_engine(engine)
-        if "trees" in insp.get_table_names():
+        if "trees" in insp.get_table_names() and "tags" in insp.get_columns("trees"):
+            version = 2
+        elif "trees" in insp.get_table_names():
             version = 1
         else:
             version = 0
@@ -49,6 +50,7 @@ class DbTree(DbBase):
     status = Column(String(64), default="open", nullable=False)
     reason = Column(String(256), default="", nullable=False)
     message_of_the_day = Column(String(800), default="", nullable=False)
+    tags = Column(String(256), default="", nullable=False)
 
     def to_dict(self):
         return dict(
@@ -56,6 +58,7 @@ class DbTree(DbBase):
             status=self.status,
             reason=self.reason,
             message_of_the_day=self.message_of_the_day,
+            tags = self.tags,
             )
 
 
@@ -104,6 +107,7 @@ class DbStatusStack(DbBase):
     reason = Column(String(256), nullable=False)
     when = Column(DateTime, nullable=False, index=True)
     status = Column(String(64), nullable=False)
+    tags = Column(String(256), nullable=False)
 
 
 class DbStatusStackTree(DbBase):

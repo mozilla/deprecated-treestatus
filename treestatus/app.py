@@ -148,6 +148,7 @@ class Status:
         t = request.session.query(model.DbTree).get(tree)
         if t:
             t = t.to_dict()
+            t['tags'] = loads(t['tags'])
         if self.memcache:
             self._mcPut('tree:%s' % tree, t, expires=60)
 
@@ -166,6 +167,10 @@ class Status:
         treenames = []
         for t in request.session.query(model.DbTree):
             trees[t.tree] = t.to_dict()
+            try:
+                trees[t.tree]['tags'] = loads(trees[t.tree]['tags'])
+            except:
+                trees[t.tree]['tags'] = ""
             treenames.append(t.tree)
             if self.memcache:
                 self._mcPut('tree:%s' % t.tree, trees[t.tree], expires=60)
@@ -184,6 +189,7 @@ class Status:
         db_tree = session.query(model.DbTree).get(tree)
         db_tree.status = status
         db_tree.reason = reason.strip()
+        db_tree.tags = tags
         if flush_stack:
             for s in session.query(model.DbStatusStackTree).filter_by(tree=tree):
                 stack = s.stack
@@ -212,7 +218,7 @@ class Status:
             # Restore its state
             last_state = loads(tree.last_state)
             self.set_status(who, tree.tree, last_state['status'], last_state['reason'],
-                            '', flush_stack=False)
+                            last_state['tags'], flush_stack=False)
 
         # Delete everything
         for tree in stack.trees:
@@ -220,7 +226,7 @@ class Status:
         session.delete(stack)
         session.commit()
 
-    def remember_state(self, who, trees, status, reason):
+    def remember_state(self, who, trees, status, reason, tags):
         if not trees:
             return
         stack = model.DbStatusStack()
@@ -228,6 +234,7 @@ class Status:
         stack.reason = reason
         stack.when = datetime.utcnow()
         stack.status = status
+        stack.tags = tags
         session = request.session
         session.add(stack)
         log.debug("Remembering %s", stack)
