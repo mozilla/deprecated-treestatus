@@ -49,6 +49,7 @@ class DbTree(DbBase):
     status = Column(String(64), default="open", nullable=False)
     reason = Column(String(256), default="", nullable=False)
     message_of_the_day = Column(String(800), default="", nullable=False)
+    tags = Column(String(256), default="", nullable=False)
 
     def to_dict(self):
         return dict(
@@ -56,6 +57,7 @@ class DbTree(DbBase):
             status=self.status,
             reason=self.reason,
             message_of_the_day=self.message_of_the_day,
+            tags = self.tags,
             )
 
 
@@ -104,6 +106,7 @@ class DbStatusStack(DbBase):
     reason = Column(String(256), nullable=False)
     when = Column(DateTime, nullable=False, index=True)
     status = Column(String(64), nullable=False)
+    tags = Column(String(256), nullable=False)
 
 
 class DbStatusStackTree(DbBase):
