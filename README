@@ -39,3 +39,12 @@ You will need to add at least one tree to the trees database to actually use tre
 
     sqlite3 treestatus.db "insert into trees (tree, status, reason, message_of_the_day) values ('mozilla-central', 'open', '', '')"
 
+Instances
+==========
+Production: https://treestatus.mozilla.org/
+Stage: https://treestatus.allizom.org/
+Dev: https://treestatus-dev.allizom.org/
+
+Dev is updated automatically on a cron with new pushes to the Github master branch.
+Stage and Production are manually updated by filing a bug https://bugzilla.mozilla.org/enter_bug.cgi?product=Infrastructure%20%26%20Operations&component=WebOps%3A%20Other
+
