@@ -1,5 +1,0 @@
-simplejson==2.3.0
-Jinja2==2.6
-SQLAlchemy==0.7.9
-zope.interface==4.0.3
-python-memcached==1.48
